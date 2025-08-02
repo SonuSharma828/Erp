@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}SIM {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Supply & Installation Jobs</h1>
+    <a href="{% url 'simjob_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New Job</a>
+
+    <div class="overflow-x-auto mt-6">
+        <table class="table-auto w-full border border-gray-300">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="border p-3 whitespace-nowrap">Project</th>
+                    <th class="border p-3 whitespace-nowrap">Customer</th>
+                    <th class="border p-3 whitespace-nowrap">Status</th>
+                    <th class="border p-3 whitespace-nowrap">Start Date</th>
+                    <th class="border p-3 whitespace-nowrap">End Date</th>
+                    <th class="border p-3 whitespace-nowrap">Assigned To</th>
+                    <th class="border p-3 whitespace-nowrap">Amount</th>
+                    <th class="border p-3 whitespace-nowrap">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr class="border hover:bg-gray-50">
+                    <td class="border p-3 text-center">{{ job.project_name|title }}</td>
+                    <td class="border p-3 text-center">{{ job.customer_name|title }}</td>
+                    <td class="border p-3 text-center">{{ job.status|title }}</td>
+                    <td class="border p-3 whitespace-nowrap text-center">{{ job.start_date }}</td>
+                    <td class="border p-3 whitespace-nowrap text-center">{{ job.end_date|default:"-" }}</td>
+                    <td class="border p-3 whitespace-nowrap text-center">{{ job.assigned_to.get_full_name|default:job.assigned_to.username|title }}</td>
+                    <td class="border p-3 text-center">{{ job.amount }}</td>
+                    <td class="border p-3 space-x-2 whitespace-nowrap text-center">
+                        <a href="{% url 'simjob_edit' job.pk %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                        <a href="{% url 'simjob_delete' job.pk %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center p-4">No jobs found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

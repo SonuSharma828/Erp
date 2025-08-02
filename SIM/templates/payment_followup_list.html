@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Payment followup {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Payment Follow-ups</h1>
+    <a href="{% url 'add_payment_followup' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New</a>
+
+    <div class="overflow-x-auto mt-6">
+        <table class="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border p-3">Job Completed</th>
+                    <th class="border p-3">Customer</th>
+                    <th class="border p-3">Address</th>
+                    <th class="border p-3">Job</th>
+                    <th class="border p-3">Amount</th>
+                    <th class="border p-3">Updated</th>
+                    <th class="border p-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for followup in followups %}
+                <tr class="border">
+                    <td class="border p-3 text-center">{{ followup.job_completed.name|title }}</td>
+                    <td class="border p-3 text-center">{{ followup.customer.customer_name|title }}</td>
+                    <td class="border p-3 text-center">{{ followup.address|title }}</td>
+                    <td class="border p-3 text-center">{{ followup.job|title }}</td>
+                    <td class="border p-3 text-center">{{ followup.amount }}</td>
+                    <td class="border p-3 text-center">{{ followup.updated }}</td>
+                    <td class="border p-3 flex space-x-2">
+                        <a href="{% url 'edit_payment_followup' followup.pk %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                        <a href="{% url 'delete_payment_followup' followup.pk %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center p-4">No records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %} Daily Status {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Daily Status List</h1>
+    <a href="{% url 'add_daily_status' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New</a>
+
+    <div class="overflow-x-auto mt-6">
+        <table class="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border p-3">Project</th>
+                    <th class="border p-3">Last Transaction</th>
+                    <th class="border p-3">Current Transaction</th>
+                    <th class="border p-3">Updated</th>
+                    <th class="border p-3">Managed By</th>
+                    <th class="border p-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in statuses %}
+                <tr class="border">
+                    <td class="border p-3 text-center">{{ status.project.name|title }}</td>
+                    <td class="border p-3 text-center">{{ status.last_transaction }}</td>
+                    <td class="border p-3 text-center">{{ status.current_transaction }}</td>
+                    <td class="border p-3 text-center">{{ status.updated }}</td>
+                    <td class="border p-3 text-center">{{ status.managed_by|title }}</td>
+                    <td class="border p-3 flex space-x-2 text-center">
+                        <a href="{% url 'edit_daily_status' status.pk %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                        <a href="{% url 'delete_daily_status' status.pk %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center p-4">No records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

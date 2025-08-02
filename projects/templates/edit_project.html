@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Project{% endblock %}
+
+{% block navcontent %}
+{% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+  <h1 class="text-3xl font-semibold mb-4">Edit Project</h1>
+
+  <form action="{% url 'project:edit_project' project.id %}" method="POST" class="bg-white p-6 rounded-md shadow-md">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Project Type (Name) -->
+      <div>
+        <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700">Project Type</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+          <p class="text-red-500 text-sm">{{ form.name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Client Dropdown --
+      <div>
+        <label for="{{ form.client.id_for_label }}" class="block text-sm font-semibold text-gray-700">Client</label>
+        {{ form.client }}
+        {% if form.client.errors %}
+          <p class="text-red-500 text-sm">{{ form.client.errors.0 }}</p>
+        {% endif %}
+      </div>-->
+
+<!-- Client -->
+<div>
+  <label for="client" class="block text-sm font-semibold text-gray-700">Client</label>
+  <input type="text" id="client-search" placeholder="Search client..." class="w-full mt-2 px-4 py-2 border rounded-md" />
+
+  <select id="client-dropdown" name="client" class="w-full mt-2 px-4 py-2 border rounded-md" required>
+    {% if project.client %}
+      <option value="{{ project.client.id }}" selected>{{ project.client.customer_name }}</option>
+    {% else %}
+      <option disabled selected>Loading clients...</option>
+    {% endif %}
+  </select>
+
+  <div class="flex justify-between mt-2">
+    <button type="button" id="prev-page" class="text-blue-600">⬅️ Prev</button>
+    <button type="button" id="next-page" class="text-blue-600">Next ➡️</button>
+  </div>
+</div>
+
+
+      <!-- Description -->
+      <div class="md:col-span-2">
+        <label for="description" class="block text-sm font-semibold text-gray-700">Description</label>
+        <textarea id="description" name="desc" rows="4" value="{{ project.desc }}" class="w-full mt-2 px-4 py-2 border rounded-md" required>{{ project.desc }}</textarea>
+      </div>
+      <div class="md:col-span-2">
+        <label for="description" class="block text-sm font-semibold text-gray-700">Address</label>
+        <textarea id="description" name="address" rows="4" value="{{ project.address }}" class="w-full mt-2 px-4 py-2 border rounded-md" required>{{ project.address }}</textarea>
+      </div>
+      <!-- Start Date -->
+      <div>
+        <label for="{{ form.startdate.id_for_label }}" class="block text-sm font-semibold text-gray-700">Start Date</label>
+        {{ form.startdate }}
+        {% if form.startdate.errors %}
+          <p class="text-red-500 text-sm">{{ form.startdate.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Deadline -->
+      <div>
+        <label for="{{ form.deadline.id_for_label }}" class="block text-sm font-semibold text-gray-700">End Date</label>
+        {{ form.deadline }}
+        {% if form.deadline.errors %}
+          <p class="text-red-500 text-sm">{{ form.deadline.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label for="{{ form.status.id_for_label }}" class="block text-sm font-semibold text-gray-700">Status</label>
+        {{ form.status }}
+        {% if form.status.errors %}
+          <p class="text-red-500 text-sm">{{ form.status.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- GST Number (If it's part of the model or handled separately) -->
+      <div>
+        <label for="gst_number" class="block text-sm font-semibold text-gray-700">GST Number</label>
+        <input type="text" id="gst_number" name="gst_number" value="{{ project.gst_number }}" class="w-full mt-2 px-4 py-2 border rounded-md" placeholder="Enter GST Number">
+      </div>
+
+      <!-- Contact Person --
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700">Contact Person</label>
+        <div class="flex gap-4 mt-2">
+          <button type="button" onclick="useClientAsContact()" class="px-3 py-1 bg-blue-500 text-white rounded">Use Client</button>
+          <button type="button" onclick="showManualContactForm()" class="px-3 py-1 bg-gray-500 text-white rounded">Add Manually</button>
+        </div>
+
+        <div id="manual-contact" class="mt-4" style="display: {{ project.contact_person_name|yesno:'block,none' }};">
+          <input type="text" name="contact_person_name" placeholder="Name" class="w-full mb-2 px-4 py-2 border rounded-md" value="{{ project.contact_person_name }}">
+          <input type="text" name="contact_person_phone" placeholder="Phone" class="w-full px-4 py-2 border rounded-md" value="{{ project.contact_person_phone }}">
+        </div>
+
+        <div id="client-dropdown" class="mt-4" style="display: {{ project.contact_person_name|yesno:'none,block' }};">
+          <label for="client" class="block text-sm font-semibold text-gray-700">Client</label>
+          <select name="contact_person" id="client" class="w-full mt-2 px-4 py-2 border rounded-md">
+            <option value="{{ project.contact_person }}" disabled>Select Client</option>
+            {% for customer in customers %}
+              <option value="{{ customer.id }}" {% if customer.id == project.client.id %}selected{% endif %}>{{ customer.customer_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+-->
+
+<div class="md:col-span-2">
+  <label class="block text-sm font-semibold text-gray-700">Contact Person</label>
+  
+  <div class="flex gap-4 mt-2">
+    <button type="button" onclick="useClientAsContact()" class="px-3 py-1 bg-blue-500 text-white rounded">Use Client</button>
+    <button type="button" onclick="showManualContactForm()" class="px-3 py-1 bg-gray-500 text-white rounded">Add Manually</button>
+  </div>
+
+  <!-- Manual Input -->
+  <div id="manual-contact" class="mt-4" style="display: {{ project.contact_person_name|yesno:'block,none' }};">
+    <input type="text" name="contact_person_name" placeholder="Name" class="w-full mb-2 px-4 py-2 border rounded-md" value="{{ project.contact_person_name }}">
+    <input type="text" name="contact_person_phone" placeholder="Phone" class="w-full px-4 py-2 border rounded-md" value="{{ project.contact_person_phone }}">
+  </div>
+
+  <!-- Dropdown Contact -->
+  <div id="client-dropdown" class="mt-4" style="display: {{ project.contact_person_name|yesno:'none,block' }};">
+    <label for="contact_person_select" class="block text-sm font-semibold text-gray-700">Select from Customers</label>
+    <input type="text" id="contact_person_search" placeholder="Search contact person..." class="w-full mt-2 px-4 py-2 border rounded-md" />
+
+    <select name="contact_person" id="contact_person_select" class="w-full mt-2 px-4 py-2 border rounded-md">
+      {% if project.contact_person %}
+        <option value="{{ project.contact_person.id }}" selected>{{ project.contact_person.customer_name }}</option>
+      {% else %}
+        <option disabled selected>Select a contact</option>
+      {% endif %}
+    </select>
+
+    <div class="flex justify-between mt-2">
+      <button type="button" id="contact_prev" class="text-blue-600">⬅️ Prev</button>
+      <button type="button" id="contact_next" class="text-blue-600">Next ➡️</button>
+    </div>
+  </div>
+</div>
+
+      <!-- Budget Section -->
+            <div>
+        <label for="equipment_budget" class="block text-sm font-semibold text-gray-700">Equipment Budget</label>
+        <input type="number" id="equipment_budget" name="budget_equipment"  value="{{ project.budget_equipment }}" class="w-full mt-2 px-4 py-2 border rounded-md" step="0.01" required>
+      </div>
+
+      <div>
+        <label for="execution_budget" class="block text-sm font-semibold text-gray-700">Execution Budget</label>
+        <input type="number" id="execution_budget" name="budget_execution" value="{{ project.budget_execution }}" class="w-full mt-2 px-4 py-2 border rounded-md" step="0.01" required>
+      </div>
+
+    </div>
+
+    <!-- Submit Button -->
+    <div class="mt-6 flex justify-end">
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update Project</button>
+      <a href="{% url 'project:project' %}" class="px-4 py-2 text-blue-500 rounded ml-2">Back</a>
+    </div>
+  </form>
+</div>
+
+<script>
+const clientUrl = "{% url 'project:ajax_customers' %}";
+
+// Reusable function for loading dropdowns
+function loadDropdownData(url, searchQuery, page, selectId, selectedId = null) {
+  fetch(`${url}?q=${encodeURIComponent(searchQuery)}&page=${page}`)
+    .then(res => res.json())
+    .then(data => {
+      const dropdown = document.getElementById(selectId);
+      dropdown.innerHTML = "";
+
+      data.results.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.text = item.name;
+        if (parseInt(item.id) === parseInt(selectedId)) {
+          option.selected = true;
+        }
+        dropdown.appendChild(option);
+      });
+
+      dropdown.disabled = false;
+
+      // Attach pagination buttons dynamically
+      if (selectId === 'client-dropdown') {
+        document.getElementById("prev-page").disabled = !data.has_prev;
+        document.getElementById("next-page").disabled = !data.has_next;
+        document.getElementById("prev-page").onclick = () => loadDropdownData(url, document.getElementById("client-search").value, data.page - 1, selectId, selectedId);
+        document.getElementById("next-page").onclick = () => loadDropdownData(url, document.getElementById("client-search").value, data.page + 1, selectId, selectedId);
+      } else {
+        document.getElementById("contact_prev").disabled = !data.has_prev;
+        document.getElementById("contact_next").disabled = !data.has_next;
+        document.getElementById("contact_prev").onclick = () => loadDropdownData(url, document.getElementById("contact_person_search").value, data.page - 1, selectId, selectedId);
+        document.getElementById("contact_next").onclick = () => loadDropdownData(url, document.getElementById("contact_person_search").value, data.page + 1, selectId, selectedId);
+      }
+    })
+    .catch(err => console.error("Dropdown load error:", err));
+}
+
+// Load client dropdown on edit
+document.addEventListener("DOMContentLoaded", function () {
+  const selectedClient = "{{ project.client.id|default:'' }}";
+  const selectedContact = "{{ project.contact_person.id|default:'' }}";
+
+  loadDropdownData(clientUrl, "", 1, "client-dropdown", selectedClient);
+  loadDropdownData(clientUrl, "", 1, "contact_person_select", selectedContact);
+
+  document.getElementById("client-search").addEventListener("input", function () {
+    loadDropdownData(clientUrl, this.value, 1, "client-dropdown", selectedClient);
+  });
+
+  document.getElementById("contact_person_search").addEventListener("input", function () {
+    loadDropdownData(clientUrl, this.value, 1, "contact_person_select", selectedContact);
+  });
+});
+</script>
+
+
+{% endblock %}
+

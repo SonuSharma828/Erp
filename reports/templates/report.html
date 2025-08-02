@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports {% endblock %}
+
+
+{% block content %}
+
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-semibold mb-4">Generate Reports</h1>
+
+        <!-- Report Filters -->
+        <div class="bg-white p-6 rounded-md shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Filters</h2>
+            <form action="{% url 'report:report_page' %}" method="GET">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Employee Filter -->
+                    <div class="flex flex-col">
+                        <label for="employee" class="mb-2">Employee</label>
+                        <select id="employee" name="employee" class="px-4 py-2 border rounded-md">
+                            <option value="">All Employees</option>
+                            <!-- Dynamically populate employee options here -->
+                            {% for employee in employees %}
+                                <option value="{{ employee.pk }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Inventory Filter -->
+                    <div class="flex flex-col">
+                        <label for="inventory" class="mb-2">Inventory</label>
+                        <select id="inventory" name="inventory" class="px-4 py-2 border rounded-md">
+                            <option value="">All Inventory</option>
+                            <!-- Dynamically populate inventory options here -->
+                            {% for item in inventory %}
+                                <option value="{{ item.pk }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Project Filter -->
+                    <div class="flex flex-col">
+                        <label for="project" class="mb-2">Project</label>
+                        <select id="project" name="project" class="px-4 py-2 border rounded-md">
+                            <option value="">All Projects</option>
+                            <!-- Dynamically populate project options here -->
+                            {% for project in projects %}
+                                <option value="{{ project.pk }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div class="flex flex-col">
+                        <label for="start_date" class="mb-2">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" class="px-4 py-2 border rounded-md">
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="end_date" class="mb-2">End Date</label>
+                        <input type="date" id="end_date" name="end_date" class="px-4 py-2 border rounded-md">
+                    </div>
+                </div>
+                
+                <!-- Generate Report Button -->
+                <div class="mt-4">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Generate Report</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Report Display -->
+        <div class="bg-white p-6 rounded-md shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Report</h2>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="px-4 py-2 text-left">ID</th>
+                        <th class="px-4 py-2 text-left">Name</th>
+                        <th class="px-4 py-2 text-left">Details</th>
+                        <th class="px-4 py-2 text-left">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populate the report data here -->
+                    {% for report in reports %}
+                        <tr class="border-b hover:bg-gray-100">
+                            <td class="px-4 py-2">{{ report.id }}</td>
+                            <td class="px-4 py-2">{{ report.name }}</td>
+                            <td class="px-4 py-2">{{ report.details }}</td>
+                            <td class="px-4 py-2">{{ report.date }}</td>
+                        </tr>
+                        {% empty %}
+        <tr>
+            <td colspan="4" class="px-4 py-2 text-center">No reports found for the selected filters.</td>
+        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- report.html -->
+
+<div class="flex justify-between my-4">
+    <a href="{% url 'report:export_pdf' %}" class="bg-blue-500 text-white px-4 py-2 rounded-md">Download PDF</a>
+    <a href="{% url 'report:export_excel' %}" class="bg-green-500 text-white px-4 py-2 rounded-md">Download Excel</a>
+</div>
+
+{% endblock %}

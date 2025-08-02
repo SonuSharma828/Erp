@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Expense List{% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Expense Approvals</h1>
+
+    <div class="flex justify-between items-center mb-4">
+        <a href="{% url 'add_expense' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New Expense</a>
+
+        <input type="text" id="searchInput" placeholder="Search..." class="border px-4 py-2 rounded shadow" onkeyup="searchTable()">
+    </div>
+
+    <form method="POST" action="{% url 'bulk_approve_expenses' %}">
+        {% csrf_token %}
+        <div class="overflow-x-auto mt-4">
+            <table id="expenseTable" class="table-auto w-full border border-gray-300 text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border p-2 text-center"><input type="checkbox" id="select-all"></th>
+                        <th class="border p-2 text-center">Title</th>
+                        <th class="border p-2 text-center">Project</th>
+                        <th class="border p-2 text-center">Type</th>
+                        <th class="border p-2 text-center">Amount</th>
+                        <th class="border p-2 text-center">Requested By</th>
+                        <th class="border p-2 text-center">Status</th>
+                        <th class="border p-2 text-center">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in page_obj %}
+                    <tr class="border">
+                        <td class="border p-2 text-center">
+                            {% if expense.status == 'Pending' %}
+                                <input type="checkbox" name="selected_expenses" value="{{ expense.id }}">
+                            {% endif %}
+                        </td>
+                        <td class="border p-2 text-center">{{ expense.expense_title|title }}</td>
+                        <td class="border p-2 text-center">{{ expense.project_name|title }}</td>
+                        <td class="border p-2 text-center">{{ expense.expense_type|title }}</td>
+                        <td class="border p-2 text-center">{{ expense.amount }}</td>
+                        <td class="border p-2 text-center">{{ expense.requested_by|title }}</td>
+                        <td class="border p-2 text-center">{{ expense.status|title }}</td>
+                        <td class="border p-2 text-center">{{ expense.entry_date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center p-4">No expenses found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded mt-4 hover:bg-green-700">Approve Selected</button>
+    </form>
+
+    {% if page_obj.paginator.count > 10 %}
+    <div class="mt-6 flex justify-center space-x-2">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">&laquo; Prev</a>
+        {% endif %}
+        <span class="px-4 py-1 bg-blue-600 text-white rounded">{{ page_obj.number }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript Section -->
+<script>
+    // ✅ Select All Toggle
+    document.getElementById('select-all').onclick = function() {
+        const checkboxes = document.getElementsByName('selected_expenses');
+        for (const checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+
+    // ✅ Search Filter
+    function searchTable() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const table = document.getElementById("expenseTable");
+        const rows = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < rows.length; i++) {
+            let match = false;
+            const cells = rows[i].getElementsByTagName("td");
+            for (const cell of cells) {
+                if (cell.textContent.toLowerCase().includes(input)) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
+{% endblock %}
+

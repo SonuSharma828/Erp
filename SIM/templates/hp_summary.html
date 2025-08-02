@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}hp summary {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+
+<div class="p-4 space-y-6">
+  <!-- Filter Section -->
+  <form method="get" class="flex flex-wrap gap-4 items-end">
+    <div class="w-full md:w-1/3">
+      <label for="emp_id" class="block text-sm font-medium">Select Employee</label>
+      <select name="emp_id" id="emp_id" class="w-full border rounded px-3 py-2">
+        {% for emp in employees %}
+          <option value="{{ emp.sno }}" {% if emp.sno|stringformat:"s" == request.GET.emp_id %}selected{% endif %}>{{ emp.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="w-full md:w-1/4">
+      <label for="start_date" class="block text-sm font-medium">Start Date</label>
+      <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="w-full border rounded px-3 py-2" />
+    </div>
+
+    <div class="w-full md:w-1/4">
+      <label for="end_date" class="block text-sm font-medium">End Date</label>
+      <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="w-full border rounded px-3 py-2" />
+    </div>
+
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Filter</button>
+  </form>
+
+  <!-- Employee Card -->
+  <div class="bg-white dark:bg-gray-800 p-6 rounded shadow flex items-center space-x-4">
+    {% if employee.photo %}
+    <img src="{{ employee.photo.url }}" alt="{{ employee.name }}" class="w-20 h-20 rounded-full border" />
+    {% else %}
+    <img src="media/employee_photos/user.png" alt="No Photos" class="w-20 h-20 rounded-full border" />
+    {% endif %}
+    <div>
+      <h2 class="text-xl font-bold">{{ employee.name }}</h2>
+      <p class="text-sm text-gray-500">{{ employee.position }} | {{ employee.email }} | {{ employee.phone }}</p>
+      <p class="text-sm">Joining: {{ employee.joining_date }}</p>
+      <p class="text-sm">Salary: ₹{{ employee.salary }}</p>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-green-100 dark:bg-green-800 p-4 rounded">
+      <h3 class="font-semibold">Tasks Completed</h3>
+      <p class="text-2xl">{{ task_stats.completed }}</p>
+    </div>
+    <div class="bg-yellow-100 dark:bg-yellow-800 p-4 rounded">
+      <h3 class="font-semibold">Total Earnings</h3>
+      <p class="text-2xl">₹{{ earnings.final }}</p>
+    </div>
+    <div class="bg-red-100 dark:bg-red-800 p-4 rounded">
+      <h3 class="font-semibold">Total Expenses</h3>
+      <p class="text-2xl">₹{{ expenses.total }}</p>
+    </div>
+    <div class="bg-blue-100 dark:bg-blue-800 p-4 rounded">
+      <h3 class="font-semibold">Net Profit</h3>
+      <p class="text-2xl">₹{{ net_profit }}</p>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="w-full mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+   <div class="bg-white rounded-xl shadow p-4">
+    <canvas id="taskStatusChart"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+    <canvas id="earningsChart"></canvas>
+   </div>
+    <div class="bg-white rounded-xl shadow p-4">
+    <canvas id="expenseChart"></canvas>
+    </div>
+     <div class="bg-white rounded-xl shadow p-4">
+    <canvas id="salaryChart"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+    <canvas id="profitDonut"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const taskStatusChart = new Chart(document.getElementById('taskStatusChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Completed', 'Rejected', 'Pending'],
+      datasets: [{
+        data: [{{ task_stats.completed }}, {{ task_stats.rejected }}, {{ task_stats.pending }}],
+        backgroundColor: ['#34D399', '#F87171', '#FBBF24']
+      }]
+    }
+  });
+
+  const earningsChart = new Chart(document.getElementById('earningsChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Tools', 'Service', 'Total'],
+      datasets: [{
+        label: 'Earnings (₹)',
+        data: [{{ earnings.tools }}, {{ earnings.service }}, {{ earnings.final }}],
+        backgroundColor: ['#3B82F6', '#10B981', '#6366F1']
+      }]
+    }
+  });
+
+  const expenseChart = new Chart(document.getElementById('expenseChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Manual', 'External', 'CoWorker'],
+      datasets: [{
+        label: 'Expenses (₹)',
+        data: [{{ expenses.manual }}, {{ expenses.external }}, {{ expenses.coworker }}],
+        backgroundColor: ['#F87171', '#FB923C', '#FBBF24']
+      }]
+    }
+  });
+
+  const salaryChart = new Chart(document.getElementById('salaryChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Salary', 'Paid', 'Deducted'],
+      datasets: [{
+        label: '₹',
+        data: [{{ salary }}, {{ total_paid }}, {{ deductions }}],
+        backgroundColor: ['#60A5FA', '#34D399', '#F87171']
+      }]
+    }
+  });
+
+  const profitDonut = new Chart(document.getElementById('profitDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Profit', 'Expenses + Deductions'],
+      datasets: [{
+        data: [{{ net_profit }}, {{ expenses.total|add:deductions }}],
+        backgroundColor: ['#10B981', '#EF4444']
+      }]
+    }
+  });
+</script>
+{% endblock %}
+
+
