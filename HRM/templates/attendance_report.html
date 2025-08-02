@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block navcontent %}
+      {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="p-4">
+  <h2 class="text-2xl font-semibold mb-4">Monthly Attendance Report</h2>
+
+  <form id="filterForm" class="flex flex-col md:flex-row gap-4 mb-6">
+    <input type="month" id="monthInput" class="border p-2 rounded w-full md:w-1/3" required>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Fetch Report</button>
+  </form>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded shadow">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="py-2 px-4">Technician</th>
+          <th class="py-2 px-4">Present</th>
+          <th class="py-2 px-4">Absent</th>
+          <th class="py-2 px-4">Leave</th>
+          <th class="py-2 px-4">Half Day</th>
+        </tr>
+      </thead>
+      <tbody id="reportTableBody">
+        <tr><td class="py-2 px-4 text-center" colspan="5">Please select a month to view report.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="mt-4">
+  <button id="downloadBtn" class="bg-green-600 text-white px-4 py-2 rounded">
+    Download CSV
+  </button>
+  <button id="pdfBtn" class="bg-red-600 text-white px-4 py-2 rounded ml-2">
+  Download PDF
+</button>
+</div>
+
+
+<script>
+document.getElementById("pdfBtn").addEventListener("click", function () {
+  const month = document.getElementById("monthInput").value;
+  if (!month) {
+    alert("Select a month first");
+    return;
+  }
+  window.location.href = `/api/attendance-report/?month=${month}&format=pdf`;
+});
+
+document.getElementById("downloadBtn").addEventListener("click", function () {
+  const month = document.getElementById("monthInput").value;
+  if (!month) {
+    alert("Select a month first");
+    return;
+  }
+  window.location.href = `/api/attendance-report/?month=${month}&format=csv`;
+});
+
+document.getElementById("filterForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const month = document.getElementById("monthInput").value;
+  if (!month) return;
+
+  fetch(`/api/attendance-report/?month=${month}`, {
+    headers: {
+      'Authorization': 'Token {{ request.user.auth_token.key }}'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    const tbody = document.getElementById("reportTableBody");
+    tbody.innerHTML = "";
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td class="py-2 px-4" colspan="5">No data found.</td></tr>`;
+      return;
+    }
+
+    data.forEach(row => {
+      tbody.innerHTML += `
+        <tr class="border-b">
+          <td class="py-2 px-4">${row.username}</td>
+          <td class="py-2 px-4">${row.present}</td>
+          <td class="py-2 px-4">${row.absent}</td>
+          <td class="py-2 px-4">${row.leave}</td>
+          <td class="py-2 px-4">${row.half}</td>
+        </tr>`;
+    });
+  });
+});
+</script>
+{% endblock %}

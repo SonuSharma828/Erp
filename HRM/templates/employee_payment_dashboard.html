@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Employee Payments{% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<a href="{% url 'spp_dashboard' %}" class="inline-block mb-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 shadow">
+    ← Back to Financial Dashboard
+</a>
+
+<h1 class="text-2xl font-bold mb-4">Employee Payments</h1>
+
+<div class="flex justify-end mb-4">
+    <label class="mr-2">Filter:</label>
+    <select id="employeeFilter" onchange="loadEmployeeChart()" class="border px-2 py-1 rounded">
+        <option value="daily">Daily</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+    </select>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+    <canvas id="employeeChart" class="w-full h-96"></canvas>
+</div>
+
+<div class="flex space-x-4 mt-6">
+    <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">Export PDF</button>
+    <a href="{% url 'export_employee_payment_csv' %}" class="bg-green-600 text-white px-4 py-2 rounded shadow">Export CSV</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold text-lg mb-2">By Department</h3>
+        <ul>
+            {% for entry in by_department %}
+            <li class="flex justify-between text-sm border-b py-1">
+                <span>{{ entry.department__department_name }}</span>
+                <span>₹ {{ entry.total|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold text-lg mb-2">By Payment Type</h3>
+        <ul>
+            {% for entry in by_type %}
+            <li class="flex justify-between text-sm border-b py-1">
+                <span>{{ entry.type__name }}</span>
+                <span>₹ {{ entry.total|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold text-lg mb-2">By Method</h3>
+        <ul>
+            {% for entry in by_method %}
+            <li class="flex justify-between text-sm border-b py-1">
+                <span>{{ entry.payment_method__name }}</span>
+                <span>₹ {{ entry.total|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.register({
+    id: 'noDataPlugin',
+    afterDraw(chart) {
+        if (!chart.data.datasets[0].data.length || chart.data.datasets[0].data.every(v => v === 0)) {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#999';
+            ctx.fillText('No data available', chart.width / 2, chart.height / 2);
+            ctx.restore();
+        }
+    }
+});
+
+let employeeChart;
+
+function loadEmployeeChart() {
+    const filter = document.getElementById("employeeFilter").value;
+
+    fetch(`/HRM/employee-payment-chart-data/?filter=${filter}`)
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("employeeChart").getContext("2d");
+            if (employeeChart) employeeChart.destroy();
+
+            employeeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Employee Payments (₹)',
+                        data: data.data,
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: v => `₹ ${v}`
+                            }
+                        }
+                    }
+                },
+                plugins: ['noDataPlugin']
+            });
+        });
+}
+
+document.addEventListener("DOMContentLoaded", loadEmployeeChart);
+</script>
+{% endblock %}
+

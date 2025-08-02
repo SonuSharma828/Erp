@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Departments {% endblock %}
+
+{% block navcontent %}
+      {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+   <div class="max-w-7xl mx-auto py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Departments</h1>
+        <a href="{% url 'add_department' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New Department</a>
+    </div>
+<div class="overflow-x-auto bg-white shadow-md rounded-lg">
+
+    <table class="min-w-full text-left border border-gray-200 text-sm">
+      <thead class="bg-gray-200">
+        <tr class="bg-gray-200">
+          <th class="px-4 py-2 text-center">Sno</th>
+          <th class="px-4 py-2 text-center">Department Name</th>
+          <th class="px-4 py-2 text-center">Created By</th>
+          <th class="px-4 py-2 text-center">Created At</th>
+          <th class="px-4 py-2 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for Department in page_obj %}
+        <tr class="border-b">
+          <td class="px-4 py-2 text-center">{{ forloop.counter0|add:page_obj.start_index }}</td>
+          <td class="px-4 py-2 text-center">{{ Department.department_name|title }}</td>
+          <td class="px-4 py-2 text-center">{{ Department.created_by.username|title }}</td>
+          <td class="px-4 py-2 text-center">{{ Department.created_at|date:"Y-m-d H:i" }}</td>
+          <td class="px-4 py-2 text-center">
+            <a href="{% url 'edit_department' Department.sno %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a> 
+            <a href="{% url 'delete_department' Department.sno %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure?')">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="mt-4 flex justify-center">
+  <nav class="inline-flex">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-l">Previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      <a href="?page={{ num }}" class="px-3 py-1 {% if num == page_obj.number %}bg-blue-500 text-white{% else %}bg-gray-200 hover:bg-gray-300{% endif %}">{{ num }}</a>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-r">Next</a>
+    {% endif %}
+  </nav>
+</div>
+{% endif %}
+  </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = "Search departments...";
+    input.className = "mb-4 px-4 py-2 border border-gray-300 rounded";
+    const container = document.querySelector('.max-w-7xl');
+    container.insertBefore(input, container.children[1]);
+
+    const rows = document.querySelectorAll(".department-row");
+
+    input.addEventListener("input", function () {
+      const search = input.value.toLowerCase();
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(search) ? "" : "none";
+      });
+    });
+  });
+</script>
+
+  {% endblock %}

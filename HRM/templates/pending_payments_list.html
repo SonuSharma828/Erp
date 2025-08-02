@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Pending Payments{% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Pending Payments for Approval</h1>
+<table class="min-w-full border border-gray-300">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="border px-4 py-2">Sno</th>
+      <th class="border px-4 py-2">Employee</th>
+      <th class="border px-4 py-2">Date</th>
+      <th class="border px-4 py-2">Type</th>
+      <th class="border px-4 py-2">Amount</th>
+      <th class="border px-4 py-2">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for payment in payments %}
+    <tr>
+      <td class="border px-4 py-2">{{ forloop.counter }}</td>
+      <td class="border px-4 py-2">{{ payment.employee.name }}</td>
+      <td class="border px-4 py-2">{{ payment.date }}</td>
+      <td class="border px-4 py-2">{{ payment.type.name }}</td>
+      <td class="border px-4 py-2">₹{{ payment.amount }}</td>
+      <td class="border px-4 py-2 flex gap-2">
+        <a href="{% url 'approve_payment' payment.id %}" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Approve</a>
+        <a href="{% url 'reject_payment' payment.id %}" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Reject</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-center p-4">No pending payments.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

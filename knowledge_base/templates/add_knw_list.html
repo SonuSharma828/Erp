@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Add KNW {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "inventory" %}
+      {% include 'dashboard/inventory.html' %}
+     {% elif request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+     {% elif request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-3xl font-bold mb-4">Add Knowledge Base Entry</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Save Entry</button>
+    </form>
+    <a href="{% url 'knowledge_list' %}" class="block text-center text-blue-500 mt-4">Back to List</a>
+  </div>
+  {% endblock %}

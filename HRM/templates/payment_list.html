@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Payment List{% endblock %}
+{% load custom_filters %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6">
+  <!-- Heading and Button -->
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+    <h1 class="text-lg font-semibold text-gray-800">Employee Payments</h1>
+    <a href="{% url 'add_payment' %}" class="inline-flex items-center bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700">
+      + Add Payment
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+    <input type="text" id="searchInput" placeholder="Search..." class="px-3 py-1.5 border border-gray-300 rounded text-sm w-48" />
+    
+    <select id="employeeFilter" class="px-3 py-1.5 border border-gray-300 rounded text-sm">
+      <option value="">All Employees</option>
+      {% for emp in employees %}
+        <option value="{{ emp.name }}">{{ emp.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="typeFilter" class="px-3 py-1.5 border border-gray-300 rounded text-sm">
+      <option value="">All Types</option>
+      {% for t in payment_types %}
+        <option value="{{ t.name }}">{{ t.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="deptFilter" class="px-3 py-1.5 border border-gray-300 rounded text-sm">
+      <option value="">All Departments</option>
+      {% for d in departments %}
+        <option value="{{ d.department_name }}">{{ d.department_name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="approvedFilter" class="px-3 py-1.5 border border-gray-300 rounded text-sm">
+      <option value="">All</option>
+      <option value="yes">Approved</option>
+      <option value="no">Not Approved</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="min-w-full text-left border border-gray-200 text-sm">
+      <thead class="bg-gray-100 text-gray-700 uppercase">
+        <tr>
+          <th class="px-4 py-3">Employee</th>
+          <th class="px-4 py-3">Date</th>
+          <th class="px-4 py-3">Payment Method</th>
+          <th class="px-4 py-3">Type</th>
+          <th class="px-4 py-3">Department</th>
+          <th class="px-4 py-3">Amount</th>
+          <th class="px-4 py-3">Approved</th>
+          <th class="px-4 py-3">Location</th>
+          <th class="px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="paymentTable">
+        {% for payment in payments %}
+        <tr class="border-t payment-row">
+          <td class="px-4 py-2">{{ payment.employee.name|title }}</td>
+          <td class="px-4 py-2">{{ payment.date }}</td>
+          <td class="px-4 py-2 text-center">{{ payment.payment_method.name|title }}</td>
+          <td class="px-4 py-2">{{ payment.type.name|title }}</td>
+          <td class="px-4 py-2">{{ payment.department|title }}</td>
+          <td class="px-4 py-2">₹{{ payment.amount }}</td>
+          <td class="px-4 py-2 text-center">
+            {% if payment.approved %}
+              <span class="text-green-600 font-bold">✔</span>
+            {% else %}
+              <span class="text-red-600 font-bold">✘</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2">{{ payment.location }}</td>
+          <td class="px-4 py-2">
+            <div class="flex gap-2">
+              <a href="{% url 'edit_payment' payment.id %}" class="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">Edit</a>
+              <a href="{% url 'delete_payment' payment.id %}" class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure?')">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center p-4">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Filter Script (unchanged) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('.payment-row');
+    const searchInput = document.getElementById('searchInput');
+    const employeeFilter = document.getElementById('employeeFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const deptFilter = document.getElementById('deptFilter');
+    const approvedFilter = document.getElementById('approvedFilter');
+
+    function filterRows() {
+      const search = searchInput.value.toLowerCase();
+      const emp = employeeFilter.value.toLowerCase();
+      const type = typeFilter.value.toLowerCase();
+      const dept = deptFilter.value.toLowerCase();
+      const approved = approvedFilter.value;
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const empText = row.children[0].innerText.toLowerCase();
+        const typeText = row.children[3].innerText.toLowerCase();
+        const deptText = row.children[4].innerText.toLowerCase();
+        const approvedText = row.children[6].innerText.includes('✔') ? 'yes' : 'no';
+
+        const matchSearch = rowText.includes(search);
+        const matchEmp = !emp || empText === emp;
+        const matchType = !type || typeText === type;
+        const matchDept = !dept || deptText === dept;
+        const matchApproved = !approved || approvedText === approved;
+
+        row.style.display = matchSearch && matchEmp && matchType && matchDept && matchApproved ? '' : 'none';
+      });
+    }
+
+    [searchInput, employeeFilter, typeFilter, deptFilter, approvedFilter].forEach(el => {
+      el.addEventListener('input', filterRows);
+      el.addEventListener('change', filterRows);
+    });
+  });
+</script>
+{% endblock %}
+

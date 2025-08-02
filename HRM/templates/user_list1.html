@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Manage User {% endblock %}
+{% block navcontent %}
+      {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Manage Users</h1>
+    <a href="{% url 'user_create' %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add User</a>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="w-full text-left border border-gray-200">
+      <thead class="bg-gray-100 text-gray-700 uppercase">
+        <tr>
+          <th class="px-4 py-3">Name</th>
+          <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3">Salary</th>
+          <th class="px-4 py-3">Department</th>
+          <th class="px-4 py-3">Active</th>
+          <th class="px-4 py-3">In Payroll</th>
+          <th class="px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr class="border-t">
+          <td class="px-4 py-2">{{ user.name }}</td>
+          <td class="px-4 py-2">{{ user.email }}</td>
+          <td class="px-4 py-2">₹ {{ user.salary }}</td>
+          <td class="px-4 py-2">{{ user.department }}</td>
+          <td class="px-4 py-2 text-xl">
+            {% if user.active %}
+              ✅
+            {% else %}
+              ❌
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 text-xl">
+            {% if user.in_payroll %}
+              ✅
+            {% else %}
+              ❌
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 space-x-2">
+            <a href="{% url 'user_edit' user.pk %}" class="text-green-600 hover:underline">Edit</a>
+            <a href="{% url 'user_delete' user.pk %}" class="text-red-600 hover:underline" onclick="return confirm('Are you sure?')">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

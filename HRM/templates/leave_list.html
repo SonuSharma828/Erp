@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block navcontent %}
+      {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="p-4">
+  <h1 class="text-2xl font-bold mb-4">Leave Requests</h1>
+
+  {% if request.user.department.department_name|lower != "hr" %}
+    <a href="{% url 'leave-apply' %}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Apply for Leave</a>
+  {% endif %}
+
+  <div class="overflow-auto">
+    <table class="min-w-full bg-white rounded shadow text-sm">
+      <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="p-2">Employee</th>
+          <th class="p-2">Type</th>
+          <th class="p-2">Dates</th>
+          <th class="p-2">Status</th>
+          <th class="p-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in leaves %}
+        <tr class="border-t">
+          <td class="p-2">{{ leave.user.username }}</td>
+          <td class="p-2">{{ leave.get_leave_type_display }}</td>
+          <td class="p-2">{{ leave.start_date }} - {{ leave.end_date }}</td>
+          <td class="p-2">
+            <span class="px-2 py-1 rounded text-white {% if leave.status == 'approved' %}bg-green-500{% elif leave.status == 'rejected' %}bg-red-500{% else %}bg-yellow-500{% endif %}">
+              {{ leave.status|title }}
+            </span>
+          </td>
+          <td class="p-2">
+            {% if user.department == 'hr' %}
+              <a href="{% url 'leave-review' leave.id %}" class="text-blue-600 underline">Review</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="p-4 text-center text-gray-500">No leave requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
