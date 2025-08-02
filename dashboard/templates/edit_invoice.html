@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block navcontent %}
+  {% include 'dashboard/admin.html' %}
+{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-6 rounded shadow mt-6">
+  <h2 class="text-xl font-semibold mb-4">{{ title }}</h2>
+  <form method="post" class="space-y-4">{% csrf_token %}
+
+    <!-- Company Field -->
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Company</label>
+      <select name="company" class="w-full border border-gray-300 rounded px-3 py-2">
+        {% for c in form.fields.company.queryset %}
+          <option value="{{ c.id }}" {% if form.instance.company.id == c.id %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Invoice Number -->
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Invoice Number</label>
+      <input type="text" name="invoice_number" class="w-full border border-gray-300 rounded px-3 py-2" value="{{ form.instance.invoice_number }}">
+    </div>
+
+    <!-- Amount -->
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Amount</label>
+      <input type="number" step="0.01" name="amount" class="w-full border border-gray-300 rounded px-3 py-2" value="{{ form.instance.amount }}">
+    </div>
+
+<!-- Client Name (Customer Dropdown) -->
+<div>
+  <label class="block text-gray-700 font-medium mb-1">Client</label>
+  <input type="text" id="clientSearch" value="{% if selected_customer %}{{ selected_customer.customer_name }}{% endif %}"   placeholder="Search Client..." class="w-full border border-gray-300 rounded px-3 py-2 mb-2">
+
+  <select name="client_name" id="clientSelect" size="6"
+          class="w-full border border-gray-300 rounded px-3 py-2 overflow-y-auto"
+          data-selected="{% if selected_customer %}{{ selected_customer.id }}{% endif %}">
+    {% for customer in customers %}
+      <option value="{{ customer.id }}">
+        {{ customer.customer_name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <!-- Pagination Controls -->
+  <div class="flex justify-between items-center mt-2 text-sm text-gray-700">
+    <button type="button" onclick="prevPage()" class="px-2 py-1 bg-gray-200 rounded">Prev</button>
+    <span id="pageInfo"></span>
+    <button type="button" onclick="nextPage()" class="px-2 py-1 bg-gray-200 rounded">Next</button>
+  </div>
+</div>
+
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update</button>
+    <a href="{% url 'invoice_list' %}" class="ml-4 text-gray-600 hover:text-gray-800 underline">Cancel</a>
+  </form>
+</div>
+<script>
+  const clientSelect = document.getElementById("clientSelect");
+  const searchInput = document.getElementById("clientSearch");
+  const pageInfo = document.getElementById("pageInfo");
+  const allOptions = Array.from(clientSelect.options);
+  const selectedClientId = clientSelect.getAttribute("data-selected");
+
+  let currentPage = 1;
+  const perPage = 10;
+
+  function renderOptions() {
+    const search = searchInput.value.toLowerCase();
+    const filtered = allOptions.filter(opt =>
+      opt.text.toLowerCase().includes(search)
+    );
+    const totalPages = Math.ceil(filtered.length / perPage);
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    const pageItems = filtered.slice(start, end);
+
+    clientSelect.innerHTML = '';
+    pageItems.forEach(opt => {
+      const newOpt = opt.cloneNode(true);
+      if (newOpt.value === selectedClientId) {
+        newOpt.selected = true;
+      }
+      clientSelect.appendChild(newOpt);
+    });
+
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    document.querySelector('button[onclick="prevPage()"]').disabled = currentPage === 1;
+    document.querySelector('button[onclick="nextPage()"]').disabled = currentPage === totalPages;
+  }
+
+  function nextPage() {
+    currentPage++;
+    renderOptions();
+  }
+
+  function prevPage() {
+    currentPage--;
+    renderOptions();
+  }
+
+  searchInput.addEventListener('input', () => {
+    currentPage = 1;
+    renderOptions();
+  });
+
+  renderOptions();  // 👈 Initial render
+</script>
+
+{% endblock %}
+

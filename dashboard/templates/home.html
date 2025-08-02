@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}ERP Dashboard {% endblock %}
+
+{% block navcontent %}
+  {% include 'dashboard/admin.html' %}
+{% endblock %}
+
+
+{% block content %}
+ <!-- Header -->
+<div class="flex justify-between items-center">
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">ERP Dashboard</h2>
+  
+    <div class="flex items-center space-x-4">
+  
+
+      <!-- Profile Dropdown -->
+      <div class="relative group">
+        </div>
+      
+    </div>
+  </div>
+
+  
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover:scale-105 transform transition duration-500">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Total Employees</h3>
+          <p class="text-4xl font-bold mt-2 text-blue-500">{{ total_emp }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover:scale-105 transform transition duration-500">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Total Projects</h3>
+          <p class="text-4xl font-bold mt-2 text-green-500">{{ total_project }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover:scale-105 transform transition duration-500">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Pending Tasks</h3>
+          <p class="text-4xl font-bold mt-2 text-yellow-500">{{ pending_tasks }}</p>
+        </div>
+      </div>
+
+<!-- Dashboard Analytics -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow transition duration-500">
+    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Project Stats</h3>
+    <canvas id="projectsChart" class="w-full h-64"></canvas>
+  </div>
+  
+ {% endblock %}
+
+
+     
+  
+
+  <!-- Footer 
+  <footer class="text-center p-4 bg-gray-800 dark:bg-gray-950 text-gray-300">
+    &copy; 2025 LEANVIA ERP System. All rights reserved.
+  </footer>-->
+{% block extra_js %}
+  <script>
+    const label = {{ labels|safe }};
+    const datas = {{ data|safe }};
+
+    const ctx = document.getElementById('projectsChart').getContext('2d');
+    const projectsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: label,
+            datasets: [{
+                label: 'Projects Added Per Month',
+                data: datas,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+
+
+
+ 
+
+</script>
+{% endblock %}

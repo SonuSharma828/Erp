@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block navcontent %}
+  {% include 'dashboard/admin.html' %}
+{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-6 rounded shadow mt-6">
+  <h2 class="text-xl font-semibold mb-4">{{ title }}</h2>
+  <form method="post" class="space-y-4">{% csrf_token %}
+    {% for field in form %}
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">{{ field.label_tag }}</label>
+      {{ field }}
+      {% if field.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ field.errors|striptags }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+       <a href="{% url 'company_list' %}" class="ml-4 text-gray-600 hover:text-gray-800 underline">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+

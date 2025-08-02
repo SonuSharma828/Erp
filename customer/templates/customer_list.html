@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer{% endblock %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|lower == "hr" %}
+        {% include 'dashboard/hr.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <h1 class="text-3xl font-bold">Client List</h1>
+    <div class="flex gap-2 w-full md:w-auto">
+      <input id="customerSearch" type="text" placeholder="Search customers..." class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded" />
+      <a href="{% url 'add_customer' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 whitespace-nowrap">+ Add New</a>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="min-w-full text-left border border-gray-200 text-sm" id="customerTable">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border px-4 py-2">Sno</th>
+          <th class="border px-4 py-2">Name</th>
+          <th class="border px-4 py-2">Phone</th>
+          <th class="border px-4 py-2">Invoice</th>
+          <th class="border px-4 py-2">Email</th>
+          <th class="border px-4 py-2">Address</th>
+          <th class="border px-4 py-2">Contact Person</th>
+          <th class="border px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in page_obj %}
+        <tr class="customer-row">
+          <td class="border px-4 py-2 text-center">{{ forloop.counter0|add:page_obj.start_index}}</td>
+          <td class="border px-4 py-2 text-center">{{ customer.customer_name|title }}</td>
+          <td class="border px-4 py-2 whitespace-nowrap text-center">{{ customer.country_code }} {{ customer.phone }}</td>
+          <td class="border px-4 py-2 text-center">{{ customer.invoice }}</td>
+          <td class="border px-4 py-2 text-center">{{ customer.email }}</td>
+          <td class="border px-4 py-2 whitespace-nowrap text-center">{{ customer.address }}</td>
+          <td class="border px-4 py-2 text-center">
+            <ul class="list-disc list-inside text-left">
+              {% for contact in customer.contacts.all %}
+                <li>{{ contact.name }} ({{ contact.phone }})</li>
+              {% empty %}
+                <li class="text-gray-400">No contacts</li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td class="border px-4 py-2 whitespace-nowrap text-center">
+            <a href="{% url 'edit_customer' customer.pk %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+            <a href="{% url 'delete_customer' customer.pk %}" onclick="return confirm('Are you sure you want to delete this customer?')" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="mt-6 flex justify-center flex-wrap gap-2 text-sm">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}"
+       class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">Previous</a>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}"
+       class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">Next</a>
+  {% endif %}
+</div>
+{% endif %}
+
+</div>
+
+<!-- ✅ Search Filter Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("customerSearch");
+    const rows = document.querySelectorAll(".customer-row");
+
+    input.addEventListener("input", function () {
+      const search = input.value.toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        row.style.display = rowText.includes(search) ? "" : "none";
+      });
+    });
+  });
+</script>
+{% endblock %}
+

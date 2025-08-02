@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+
+{% block title %} Add New Customer {% endblock %}
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+  <h1 class="text-3xl font-bold mb-6">Add Customer</h1>
+
+  <form method="post" enctype="multipart/form-data" action="{% url 'add_customer' %}">
+    {% csrf_token %}
+
+    <!-- Customer Fields -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="block font-medium mb-1">Customer Name</label>{{ form.customer_name }}</div>
+      <div><label class="block font-medium mb-1">Invoice</label>{{ form.invoice }}</div>
+      <div><label class="block font-medium mb-1">Address</label>{{ form.address }}</div>
+
+      <div class="col-span-2">
+        <label class="block font-medium mb-1">Phone Number</label>
+        <div class="flex">
+          <div class="w-1/4">{{ form.country_code|add_class:"block w-full border border-gray-300 rounded-l px-2 py-2" }}</div>
+          <div class="w-3/4">{{ form.phone|add_class:"block w-full border border-gray-300 rounded-r px-2 py-2" }}</div>
+        </div>
+      </div>
+      <div><label class="block font-medium mb-1">Email</label>{{ form.email }}</div>
+    </div>
+
+    <!-- Contact Persons -->
+    <div class="mt-6 border-t pt-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">Contact Person(s)</h2>
+        <button type="button" onclick="openContactModal()" class="bg-green-600 text-white px-3 py-1 rounded text-sm">+ Add Contact</button>
+      </div>
+      <input type="hidden" name="contacts-TOTAL_FORMS" id="id_contacts-TOTAL_FORMS" value="0">
+      <div id="contact-list" class="space-y-2 mt-4"></div>
+    </div>
+
+  
+
+    <!-- Submit -->
+    <div class="mt-6">
+      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded">
+        Save
+      </button>
+    </div>
+  </form>
+
+  <a href="{% url 'customer_list' %}" class="block text-center text-blue-500 mt-4">Back to List</a>
+</div>
+<!-- Contact Modal -->
+<div id="contactModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
+    <h2 class="text-lg font-semibold mb-4">Add Contact Person</h2>
+    <form id="contactForm">
+      <div class="mb-3"><label>Name</label><input type="text" id="contactName" class="w-full border px-2 py-1 rounded" required></div>
+      <div class="mb-3"><label>Phone</label><input type="text" id="contactPhone" class="w-full border px-2 py-1 rounded" required></div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeContactModal()" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+        <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+  let contactIndex = 0;
+  
+
+  // Contact Modal Logic
+  function openContactModal() {
+    document.getElementById('contactModal').classList.remove('hidden');
+  }
+
+  function closeContactModal() {
+    document.getElementById('contactModal').classList.add('hidden');
+    document.getElementById('contactForm').reset();
+  }
+
+  document.getElementById('contactForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = document.getElementById('contactName').value;
+    const phone = document.getElementById('contactPhone').value;
+
+    const wrapper = document.getElementById('contact-list');
+    wrapper.innerHTML += `
+      <div class="border p-2 rounded bg-gray-50">
+        <strong>${name}</strong> - ${phone}
+        <input type="hidden" name="contacts-${contactIndex}-name" value="${name}">
+        <input type="hidden" name="contacts-${contactIndex}-phone" value="${phone}">
+      </div>
+    `;
+
+    contactIndex++;
+    document.getElementById('id_contacts-TOTAL_FORMS').value = contactIndex;
+    closeContactModal();
+  });
+
+</script>
+{% endblock %}
+

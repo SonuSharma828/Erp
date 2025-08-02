@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %} Edit Customer {% endblock %}
+
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block content %}
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-3xl font-bold mb-4">
+      {% if form.instance.pk %} Edit Customer {% else %} edit Customer {% endif %}
+    </h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block mb-1 font-medium">Customer Name</label>
+        {{ form.customer_name}}
+      </div>
+
+      <div>
+        <label class="block mb-1 font-medium">Address</label>
+        {{ form.address}}
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Contact Person</label>
+        {{ form.contactperson}}
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Country Code</label>
+        {{ form.country_code}}
+        <label class="block mb-1 font-medium">Phone</label>
+        {{ form.phone }}
+      </div>
+
+      <div>
+        <label class="block mb-1 font-medium">Email</label>
+        {{ form.email}}
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        {% if form.instance.pk %} Update {% else %} Save {% endif %}
+      </button>
+    </form>
+
+    <a href="{% url 'customer_list' %}" class="block text-center text-blue-500 mt-4">Back to List</a>
+  </div>
+ {% endblock %}
