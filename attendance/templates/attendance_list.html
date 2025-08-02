@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Attendance{% endblock %}
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-4">
+  <h2 class="text-2xl font-bold">Attendance Records</h2>
+  <a href="{% url 'mark_attendance' %}" class="bg-green-700 text-white px-4 py-2 rounded-md">Mark Attendance</a>
+</div>
+<form method="get" class="mb-4 flex flex-wrap gap-4 items-end">
+  <div>
+    <label class="text-sm">User</label>
+    <select name="user" class="w-full border px-3 py-2 rounded-md">
+      <option value="">All</option>
+      {% for u in users %}
+        <option value="{{ u.id }}" {% if selected_user == u.id|stringformat:"s" %}selected{% endif %}>{{ u.get_full_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="text-sm">Date</label>
+    <input type="date" name="date" value="{{ selected_date }}" class="w-full border px-3 py-2 rounded-md">
+  </div>
+  <div>
+    <button class="bg-blue-700 text-white px-4 py-2 rounded-md">Filter</button>
+  </div>
+</form>
+
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white rounded-xl shadow-md">
+    <thead class="bg-gray-100 text-left">
+      <tr>
+        <th class="p-3 text-center">Employee</th>
+        <th class="p-3 text-center">Date</th>
+        <th class="p-3 text-center">Status</th>
+        <th class="p-3 text-center">Remarks</th>
+        <th class="p-3 text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr class="border-t">
+        <td class="p-3 text-center">{{ record.user.username }}</td>
+        <td class="p-3 text-center">{{ record.date }}</td>
+        <td class="p-3 capitalize text-center">{{ record.get_status_display }}</td>
+        <td class="p-3 text-center">{{ record.remarks }}</td>
+        <td class="p-3 text-center">
+          <a href="{% url 'edit_attendance' record.pk %}" class="text-green-600">Edit</a> |
+          <a href="{% url 'monthly_attendance_report' user.id %}" class="text-blue-600 text-sm">Monthly Report</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+

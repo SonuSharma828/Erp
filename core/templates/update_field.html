@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block navcontent %}
+  {% include 'dashboard/admin.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 bg-white shadow p-6 rounded">
+    <h2 class="text-xl font-semibold mb-4">Edit {{ label }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label class="block text-sm font-medium mb-1">Name</label>
+        <input type="text" name="name" value="{{ field.name }}" class="w-full p-2 border rounded mb-4" required>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update</button>
+        <a href="{% url 'manage_dropdowns' %}" class="ml-3 text-gray-600 hover:underline">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+
