@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Employees {% endblock %}
+{% load static %}
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <!-- Header -->
+  <div class=" flex justify-between items-center">
+     <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Employees</h2>
+  </div>
+
+  <!-- Search + Add Employee -->
+  <div class="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <input type="text" id="employeeSearchInput" placeholder="Search employees..." class="px-4 py-2 border rounded w-full md:w-1/3">
+    <a href="{% url 'employee:add_employee' %}"> <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Employee</button></a>
+  </div>
+
+  <!-- Employees Table -->
+  <div class="p-6">
+    <div class="overflow-x-auto">
+      <table class="w-full table-auto border-collapse rounded overflow-hidden shadow" id="employeeTable">
+        <thead class="bg-gray-200 dark:bg-gray-800">
+          <tr>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Sno.</th>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Photo</th>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Name</th>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Position</th>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Email</th>
+            <th class="px-6 py-3 text-left whitespace-nowrap">Phone</th>
+            <th class="px-6 py-3 text-center whitespace-nowrap">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for employee in page_obj %}
+          <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+            <td class="px-6 py-4 whitespace-nowrap">{{ forloop.counter0|add:page_obj.start_index }}</td>
+            <td class="px-6 py-4 flex items-center gap-2 whitespace-nowrap">
+                {% if employee.photo %}
+              <img src="{{ employee.photo.url }}" class="w-8 h-8 rounded-full" alt="Employee image">
+              {% else %}
+              <span>No Image</span> 
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap"><a href="{% url 'employee:employee_detail' employee.pk %}" class="text-blue-600 hover:underline">
+                        {{ employee.name|title }}</a></td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ employee.position|title }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ employee.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ employee.phone }}</td>
+            <td class="px-6 py-4 text-center space-x-2 whitespace-nowrap">
+             <a href="{% url 'employee:edit_employee' employee.pk %}"><button class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</button></a>
+             <a href="{% url 'employee:delete_employee' employee.pk %}" onclick="confirm('Are you sure you want to Delete ??')"> <button class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600">Delete</button></a>
+            </td>
+          </tr>
+         {% endfor %}
+        </tbody>
+      </table>
+<div class="mt-6 flex justify-center flex-wrap gap-2 text-sm">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}"
+       class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">Previous</a>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}"
+       class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">Next</a>
+  {% endif %}
+</div>
+
+    </div>
+  </div>
+
+
+<script>
+  const searchInput = document.getElementById('employeeSearchInput');
+  const table = document.getElementById('employeeTable');
+  const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+  searchInput.addEventListener('input', function () {
+    const filter = this.value.toLowerCase();
+
+    Array.from(rows).forEach(row => {
+      // Get text content from columns: Name(2), Position(3), Email(4), Phone(5)
+      const name = row.cells[2].textContent.toLowerCase();
+      const position = row.cells[3].textContent.toLowerCase();
+      const email = row.cells[4].textContent.toLowerCase();
+      const phone = row.cells[5].textContent.toLowerCase();
+      if (
+        name.includes(filter) ||
+        position.includes(filter) ||
+        email.includes(filter) ||
+        phone.includes(filter)
+      ) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  });
+</script>
+
+    {% endblock %}
+ 

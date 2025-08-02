@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Expense</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition duration-300">
+
+  <div class="flex flex-col md:flex-row min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-gray-800 dark:bg-gray-950 text-white flex flex-col p-5 space-y-6 transition duration-500">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">ERP System</h1>
+        <button class="md:hidden" onclick="document.getElementById('menu').classList.toggle('hidden')">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+
+      <nav id="menu" class="space-y-4 md:block hidden">
+
+        <!-- Admin Menu -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('adminMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>Admin</span>
+          </button>
+          <div id="adminMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="/" class="block hover:text-blue-400 transition">Dashboard</a>
+            <a href="{% url 'cashbook_list' %}" class="block hover:text-blue-400 transition">Manage Cashbook</a>
+          </div>
+        </div>
+      
+        <!-- Knowledge Base -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('knowledgeMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8"/>
+            </svg>
+            <span>Knowledge Base</span>
+          </button>
+          <div id="knowledgeMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'knowledge_list' %}" class="block hover:text-blue-400 transition">KNW</a>
+          </div>
+        </div>
+      
+        <!-- Planning -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('planningMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>
+            </svg>
+            <span>Planning</span>
+          </button>
+          <div id="planningMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'project:project' %}" class="block hover:text-blue-400 transition">Manage Projects</a>
+            <a href="{% url 'task_group_list' %}" class="block hover:text-blue-400 transition">Manage Task Groups</a>
+            <a href="{% url 'task_list' %}" class="block hover:text-blue-400 transition">Manage Tasks</a>
+            <a href="#" class="block hover:text-blue-400 transition">Daily Status</a>
+          </div>
+        </div>
+      
+        <!-- Direct Links -->
+        <a href="{% url 'employee:employee' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7.5 7.5 0 0112 15a7.5 7.5 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>Employees</span>
+        </a>
+      
+      
+      
+        <a href="{% url 'inventory:list' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>
+          </svg>
+          <span>Inventory</span>
+        </a>
+      
+        <a href="{% url 'report:report_page' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h13M5 7h14M5 12h9"/>
+          </svg>
+          <span>Reports</span>
+        </a>
+      
+
+         <!-- Finance -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('FinanceMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.1 0-2 .9-2 2 0 .6.4 1.4 1 2h2c.6-.6 1-1.4 1-2 0-1.1-.9-2-2-2zm0 0V5m0 8v3"/>
+            </svg>
+            <span>Finance</span>
+          </button>
+          <div id="FinanceMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'finance' %}" class="block hover:text-blue-400 transition">Finance Summary</a>
+            <a href="{% url 'add_expense' %}" class="block hover:text-blue-400 transition">Add Expenses</a>
+            <a href="{% url 'add_income' %}" class="block hover:text-blue-400 transition">Add Income</a>
+            <a href="{% url 'add_salary_payment' %}" class="block hover:text-blue-400 transition">Add Salary Payments</a>
+          </div>
+        </div>
+      
+      </nav>
+
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 space-y-8 transition duration-500">
+
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 class="text-2xl font-bold mb-6 text-center">Add New Expense</h1>
+
+        <form method="post" class="space-y-4" action="{% url 'add_expense' %}">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold mb-1">Date</label>
+                {{ form.date }}
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Amount (₹)</label>
+                {{ form.amount }}
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Payment Method</label>
+                {{ form.payment_method }}
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Description</label>
+                {{ form.description }}
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-red-700 transition">
+                Save Expense
+            </button>
+        </form>
+    </div>
+</main>
+</div>
+<script>
+function toggleSubMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    menu.classList.toggle('hidden');
+  }
+</script>
+</body>
+</html>

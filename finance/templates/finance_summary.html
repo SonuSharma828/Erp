@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition duration-300">
+
+  <div class="flex flex-col md:flex-row min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-gray-800 dark:bg-gray-950 text-white flex flex-col p-5 space-y-6 transition duration-500">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">ERP System</h1>
+        <button class="md:hidden" onclick="document.getElementById('menu').classList.toggle('hidden')">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+
+      <nav id="menu" class="space-y-4 md:block hidden">
+
+        <!-- Admin Menu -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('adminMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>Admin</span>
+          </button>
+          <div id="adminMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="/" class="block hover:text-blue-400 transition">Dashboard</a>
+            <a href="{% url 'cashbook_list' %}" class="block hover:text-blue-400 transition">Manage Cashbook</a>
+          </div>
+        </div>
+      
+        <!-- Knowledge Base -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('knowledgeMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8"/>
+            </svg>
+            <span>Knowledge Base</span>
+          </button>
+          <div id="knowledgeMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'knowledge_list' %}" class="block hover:text-blue-400 transition">KNW</a>
+          </div>
+        </div>
+      
+        <!-- Planning -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('planningMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>
+            </svg>
+            <span>Planning</span>
+          </button>
+          <div id="planningMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'project:project' %}" class="block hover:text-blue-400 transition">Manage Projects</a>
+            <a href="{% url 'task_group_list' %}" class="block hover:text-blue-400 transition">Manage Task Groups</a>
+            <a href="{% url 'task_list' %}" class="block hover:text-blue-400 transition">Manage Tasks</a>
+            <a href="#" class="block hover:text-blue-400 transition">Daily Status</a>
+          </div>
+        </div>
+      
+        <!-- Direct Links -->
+        <a href="{% url 'employee:employee' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7.5 7.5 0 0112 15a7.5 7.5 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>Employees</span>
+        </a>
+      
+      
+      
+        <a href="{% url 'inventory:list' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>
+          </svg>
+          <span>Inventory</span>
+        </a>
+      
+        <a href="{% url 'report:report_page' %}" class="flex items-center space-x-2 hover:text-gray-400 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h13M5 7h14M5 12h9"/>
+          </svg>
+          <span>Reports</span>
+        </a>
+      
+
+         <!-- Finance -->
+        <div class="group">
+          <button class="flex items-center w-full text-left space-x-2 hover:text-gray-400 transition focus:outline-none" onclick="toggleSubMenu('FinanceMenu')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.1 0-2 .9-2 2 0 .6.4 1.4 1 2h2c.6-.6 1-1.4 1-2 0-1.1-.9-2-2-2zm0 0V5m0 8v3"/>
+            </svg>
+            <span>Finance</span>
+          </button>
+          <div id="FinanceMenu" class="ml-6 mt-2 space-y-2 hidden">
+            <a href="{% url 'finance' %}" class="block hover:text-blue-400 transition">Finance Summary</a>
+            <a href="{% url 'add_expense' %}" class="block hover:text-blue-400 transition">Add Expenses</a>
+            <a href="{% url 'add_income' %}" class="block hover:text-blue-400 transition">Add Income</a>
+            <a href="{% url 'add_salary_payment' %}" class="block hover:text-blue-400 transition">Add Salary Payments</a>
+          </div>
+        </div>
+      
+      </nav>
+
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 space-y-8 transition duration-500">
+
+    <!-- Top Navbar -->
+  <div class="flex justify-between items-center">
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">ERP Finance Dashboard</h2>
+    
+    </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8 overflow-y-auto">
+
+            <!-- Date Filters -->
+            <form method="get" class="mb-6 flex gap-4">
+                <div>
+                    <label for="start_date" class="font-semibold">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="form-input border p-2 rounded">
+                </div>
+                <div>
+                    <label for="end_date" class="font-semibold">End Date</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="form-input border p-2 rounded">
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition self-end">Filter</button>
+            </form>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div class="bg-blue-100 p-6 rounded-xl shadow">
+                    <h2 class="font-semibold text-lg">Total Income</h2>
+                    <p class="text-2xl font-bold text-blue-600">₹{{ total_income }}</p>
+                </div>
+                <div class="bg-red-100 p-6 rounded-xl shadow">
+                    <h2 class="font-semibold text-lg">Total Expenses</h2>
+                    <p class="text-2xl font-bold text-red-600">₹{{ total_expense }}</p>
+                </div>
+                <div class="bg-green-100 p-6 rounded-xl shadow">
+                    <h2 class="font-semibold text-lg">Salaries Paid</h2>
+                    <p class="text-2xl font-bold text-green-600">₹{{ total_salary }}</p>
+                </div>
+                <div class="bg-yellow-100 p-6 rounded-xl shadow">
+                    <h2 class="font-semibold text-lg">Profit/Loss</h2>
+                    <p class="text-2xl font-bold {% if profit_loss >= 0 %}text-green-600{% else %}text-red-600{% endif %}">₹{{ profit_loss }}</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h3 class="font-semibold mb-4">Income vs Expense</h3>
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h3 class="font-semibold mb-4">Profit/Loss Trend</h3>
+                    <canvas id="profitLossChart"></canvas>
+                </div>
+            </div>
+<!-- PDF Export Button -->
+<div class="flex justify-end mt-6">
+    <a href="{% url 'export_finance_pdf' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+        Export to PDF
+    </a>
+</div>
+
+<!-- CSV Export Button -->
+<div class="flex justify-end mt-6">
+    <a href="{% url 'export_finance_csv' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+        Export to CSV
+    </a>
+</div>
+            <!-- Optionally: Add Data Tables -->
+            <!-- You can drop your income, expense, salary tables here -->
+
+        </div>
+    </div>
+</main>
+</div>
+    <!-- Chart Scripts -->
+    <script>
+        const incomeExpenseChart = new Chart(document.getElementById('incomeExpenseChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expense'],
+                datasets: [{
+                    label: 'Amount (₹)',
+                    data: [{{ total_income }}, {{ total_expense }}],
+                    backgroundColor: ['#4CAF50', '#FF5733'],
+                    borderColor: ['#4CAF50', '#FF5733'],
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+        const profitLossChart = new Chart(document.getElementById('profitLossChart'), {
+            type: 'line',
+            data: {
+                labels: ['Start', 'End'],
+                datasets: [{
+                    label: 'Profit/Loss (₹)',
+                    data: [0, {{ profit_loss }}],
+                    fill: false,
+                    borderColor: '{% if profit_loss >= 0 %}green{% else %}red{% endif %}',
+                    tension: 0.1
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+
+
+
+      
+function toggleSubMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    menu.classList.toggle('hidden');
+  }
+
+    </script>
+
+</body>
+</html>

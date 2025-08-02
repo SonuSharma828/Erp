@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Employee {% endblock %}
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-lg p-8 space-y-6">
+    <h2 class="text-3xl font-bold text-gray-800 text-center">Add New Employee</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-4" action="{% url 'employee:add_employee' %}">
+      {% csrf_token %}
+
+      <!-- Full Name -->
+      <div>
+        <label class="block font-medium">Full Name</label>
+        <input type="text" name="name" required placeholder="John Doe"
+               class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="block font-medium">Email</label>
+        <input type="email" name="email" required placeholder="example@company.com" class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+
+      <!-- Phone Number -->
+      <div>
+        <label class="block font-medium">Phone Number</label>
+        <input type="tel" name="phone" pattern="[0-9]{10}" required placeholder="10-digit number"
+               class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+
+      <!-- Position -->
+      <div>
+        <label class="block font-medium">Position</label>
+        <input type="text" name="position" required placeholder="Manager, Developer, etc."  class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+
+      <!-- Address -->
+      <div>
+        <label class="block font-medium">Address</label>
+        <textarea name="address" required placeholder="Your Address" rows="3" class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"></textarea>
+      </div>
+
+      <!-- Salary -->
+      <div>
+        <label class="block font-medium">Salary</label>
+        <input type="number" name="salary" required placeholder="Salary"  class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+      <!-- Joining Date -->
+      <div>
+        <label class="block font-medium">Joining Date</label>
+        <input type="date" name="joining_date" required class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+      </div>
+
+      <div>
+        <label for="{{ form.photo_id_type.id_for_label }}" class="block font-medium">Photo ID Type</label>
+        {{ form.photo_id_type }}
+        {% if form.photo_id_type.errors %}
+          <p class="text-red-500 text-sm">{{ form.photo_id_type.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+<!-- Upload Photo ID File -->
+<div>
+  <label class="block font-medium">Upload Photo ID (Max 2MB)</label>
+  <input type="file" name="photo_id_file" accept=".pdf,image/*" class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+</div>
+      <!-- Profile Image -->
+      <div>
+        <label class="block font-medium">Profile Image (Max 2MB)</label>
+        <input type="file" name="photo" accept="image/*" onchange="previewImage(event)" class="w-full p-3 border rounded-lg transition focus:ring-2 focus:ring-blue-400"/>
+        <img id="preview" src="" class="mt-3 w-24 h-24 rounded-full object-cover hidden"/>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Add Employee
+      </button>
+<a href="{% url 'employee:employee' %}" class="ml-4 text-gray-600 hover:text-gray-800 underline">Cancel</a>
+    </form>
+  </div>
+<script>
+  document.querySelector('input[name="photo_id_file"]').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file && file.size > 2 * 1024 * 1024) {
+      alert("File size exceeds 2MB limit!");
+      e.target.value = "";  // clear file input
+    }
+  });
+</script>
+
+
+{% endblock %}
