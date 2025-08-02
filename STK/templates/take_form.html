@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|lower == "inventory" %}
+        {% include 'dashboard/inventory.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+    <h2 class="text-2xl font-bold mb-4">
+        {% if form.instance.pk %}Edit Take Record{% else %}Add New Take Record{% endif %}
+    </h2>
+
+    <form method="post" class="bg-white p-6 rounded shadow">
+        {% csrf_token %}
+
+        <div>
+            {{ form.item.label_tag }} {{ form.item }}
+        </div>
+
+        <div>
+            {{ form.transaction_type.label_tag }} {{ form.transaction_type }}
+        </div>
+
+        <div>
+            {{ form.quantity.label_tag }} {{ form.quantity }}
+        </div>
+
+        <div id="price-wrapper">
+    <label for="id_price" class="block text-sm font-medium text-gray-700">Price</label>
+    <div id="bill-style" class="hidden border border-green-400 bg-green-50 text-green-800 rounded px-4 py-2 mt-1 mb-2">
+        <strong>Bill Entry:</strong> Please enter the purchase price of this stock.
+    </div>
+    {{ form.price }}
+</div>
+
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Issued to</label> {{ form.taken_by }}
+        </div>
+
+        <div>
+            {{ form.date.label_tag }} {{ form.date }}
+        </div>
+
+        <div>
+            {{ form.note.label_tag }} {{ form.note }}
+        </div>
+
+        <div class="mt-4 flex justify-between">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+            <a href="{% url 'take_list' %}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript for price toggle -->
+<script>
+/*    document.addEventListener("DOMContentLoaded", function() {
+        const typeField = document.getElementById("id_transaction_type");
+        const priceWrapper = document.getElementById("price-wrapper");
+
+        function togglePriceField() {
+            if (typeField.value === "IN" || typeField.value === "iN" || typeField.value === "In" || typeField.value === "in") {
+                priceWrapper.style.display = "block";
+            } else {
+                priceWrapper.style.display = "none";
+            }
+        }
+
+        typeField.addEventListener("change", togglePriceField);
+        togglePriceField(); // Initialize on load
+    }); */
+
+document.addEventListener("DOMContentLoaded", function() {
+    const typeField = document.getElementById("id_transaction_type");
+    const billStyle = document.getElementById("bill-style");
+
+    function toggleBillStyle() {
+        if (typeField.value.toLowerCase() === "in") {
+            billStyle.classList.remove("hidden");
+        } else {
+            billStyle.classList.add("hidden");
+        }
+    }
+
+    typeField.addEventListener("change", toggleBillStyle);
+    toggleBillStyle(); // Run on page load
+});
+</script>
+{% endblock %}
+

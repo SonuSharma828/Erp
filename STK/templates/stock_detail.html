@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|lower == "inventory" %}
+        {% include 'dashboard/inventory.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+    <h2 class="text-2xl font-bold mb-6">Stock Item Detail</h2>
+
+    <div class="bg-white rounded shadow p-6 mb-6">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">{{ stock.item_name }}</h3>
+        <div class="grid grid-cols-2 gap-4 text-gray-800">
+            <p><strong>Category:</strong> {{ stock.category.name }}</p>
+            <p><strong>Unit:</strong> {{ stock.unit.name }} ({{ stock.unit.symbol }})</p>
+            <p><strong>Quantity in Stock:</strong> {{ stock.quantity }}</p>
+            <p><strong>Price:</strong> ₹{{ stock.price }}</p>
+            <p class="col-span-2"><strong>Description:</strong> {{ stock.description|default:"—" }}</p>
+        </div>
+    </div>
+
+<!-- Section 1: Addition History -->
+<div class="bg-white rounded shadow p-6 mt-6">
+    <h3 class="text-xl font-semibold text-gray-700 mb-4">Addition History (STKStockForm)</h3>
+    {% if addition_history %}
+    <table class="w-full text-sm text-left">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="py-2 px-4 border">Date</th>
+                <th class="py-2 px-4 border">Qty Added</th>
+                <th class="py-2 px-4 border">Price</th>
+                <th class="py-2 px-4 border">Added By</th>
+            </tr>
+        </thead>
+  <tbody>
+            {% for h in addition_history %}
+            <tr class="hover:bg-gray-50">
+                <td class="py-2 px-4 border">{{ h.added_at|date:"Y-m-d H:i" }}</td>
+                <td class="py-2 px-4 border">{{ h.quantity_added }}</td>
+                <td class="py-2 px-4 border">₹{{ h.price_at_time }}</td>
+                <td class="py-2 px-4 border">{{ h.added_by }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="text-gray-500">No addition records found.</p>
+    {% endif %}
+</div>
+
+<!--
+    <div class="bg-white rounded shadow p-6">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Stock Transaction History</h3>
+        {% if transactions %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left text-gray-700">
+                <thead class="bg-gray-100 text-gray-900 font-semibold">
+                    <tr>
+                        <th class="py-2 px-4 border">Date</th>
+                        <th class="py-2 px-4 border">Type</th>
+                        <th class="py-2 px-4 border">Quantity</th>
+                        <th class="py-2 px-4 border">Price</th>
+                        <th class="py-2 px-4 border">Taken By</th>
+                        <th class="py-2 px-4 border">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-2 px-4 border">{{ txn.date|date:"Y-m-d H:i" }}</td>
+                        <td class="py-2 px-4 border">
+                            <span class="{% if txn.transaction_type == 'IN' %}text-green-600{% else %}text-red-600{% endif %} font-bold">
+                                {{ txn.transaction_type }}
+                            </span>
+                        </td>
+                        <td class="py-2 px-4 border">{{ txn.quantity }}</td>
+                        <td class="py-2 px-4 border">₹{{ txn.price|default:"—" }}</td>
+                        <td class="py-2 px-4 border">{{ txn.taken_by }}</td>
+                        <td class="py-2 px-4 border">{{ txn.note|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-gray-600">No transaction history available for this item.</p>
+        {% endif %}
+    </div>
+-->
+
+
+
+<!-- Section 2: STKTake IN/OUT History -->
+<div class="bg-white rounded shadow p-6 mt-6">
+    <h3 class="text-xl font-semibold text-gray-700 mb-4">Transaction History (IN / OUT)</h3>
+    {% if transaction_history %}
+    <table class="w-full text-sm text-left">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="py-2 px-4 border">Date</th>
+                <th class="py-2 px-4 border">Type</th>
+                <th class="py-2 px-4 border">Quantity</th>
+                <th class="py-2 px-4 border">Price</th>
+                <th class="py-2 px-4 border">Taken By</th>
+                <th class="py-2 px-4 border">Note</th>
+            </tr>
+        </thead>
+      <tbody>
+            {% for txn in transaction_history %}
+            <tr class="hover:bg-gray-50">
+                <td class="py-2 px-4 border">{{ txn.date|date:"Y-m-d H:i" }}</td>
+                <td class="py-2 px-4 border">
+                    {% if txn.transaction_type|lower == "in" %}<span class="text-green-600">IN</span>
+                    {% else %}<span class="text-red-600">OUT</span>{% endif %}
+                </td>
+                <td class="py-2 px-4 border">{{ txn.quantity }}</td>
+                <td class="py-2 px-4 border">₹{{ txn.price }}</td>
+                <td class="py-2 px-4 border">{{ txn.taken_by }}</td>
+                <td class="py-2 px-4 border">{{ txn.note|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+   </table>
+    {% else %}
+        <p class="text-gray-500">No transaction history found.</p>
+    {% endif %}
+</div>
+    <div class="mt-6">
+        <a href="{% url 'stock_list' %}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Back to Stock List</a>
+    </div>
+</div>
+{% endblock %}
+

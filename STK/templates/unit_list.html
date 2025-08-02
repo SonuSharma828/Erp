@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|lower == "inventory" %}
+        {% include 'dashboard/inventory.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">STK Units</h1>
+    <a href="{% url 'unit_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add New</a>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="mb-4">
+    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for units..." 
+           class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring focus:border-blue-300">
+  </div>
+
+  <table id="unitTable" class="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+    <thead>
+      <tr class="bg-gray-100 text-left">
+        <th class="py-2 px-4">S.No</th>
+        <th class="py-2 px-4">Name</th>
+        <th class="py-2 px-4">Symbol</th>
+        <th class="py-2 px-4">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for unit in units %}
+      <tr class="border-t hover:bg-gray-50">
+        <td class="py-2 px-4">{{ forloop.counter0|add:units.start_index}}</td>
+        <td class="py-2 px-4">{{ unit.name|title }}</td>
+        <td class="py-2 px-4">{{ unit.symbol|title }}</td>
+        <td class="py-2 px-4">
+          <a href="{% url 'unit_edit' unit.id %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+          <a href="{% url 'unit_delete' unit.id %}"
+             onclick="return confirm('Are you sure you want to delete {{ unit.name }}?')"
+             class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600">Delete</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center py-4 text-gray-500">No units found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% if units.paginator.num_pages > 1 %}
+<!-- Pagination Controls -->
+<div class="flex justify-center mt-6">
+  <nav class="inline-flex shadow-sm">
+    {% if units.has_previous %}
+      <a href="?page={{ units.previous_page_number }}" class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-100">Previous</a>
+    {% else %}
+      <span class="px-3 py-2 bg-gray-200 border border-gray-300 text-gray-500 cursor-not-allowed">Previous</span>
+    {% endif %}
+
+    {% for num in units.paginator.page_range %}
+      {% if units.number == num %}
+        <span class="px-3 py-2 bg-blue-500 text-white border border-gray-300">{{ num }}</span>
+      {% elif num >= units.number|add:-2 and num <= units.number|add:2 %}
+        <a href="?page={{ num }}" class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-100">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if units.has_next %}
+      <a href="?page={{ units.next_page_number }}" class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-100">Next</a>
+    {% else %}
+      <span class="px-3 py-2 bg-gray-200 border border-gray-300 text-gray-500 cursor-not-allowed">Next</span>
+    {% endif %}
+  </nav>
+</div>
+{% endif %}
+</div>
+
+<!-- Real-time Search Script -->
+<script>
+function searchTable() {
+  let input = document.getElementById("searchInput").value.toLowerCase();
+  let rows = document.querySelectorAll("#unitTable tbody tr");
+
+  rows.forEach(row => {
+    let name = row.cells[1].textContent.toLowerCase();
+    let symbol = row.cells[2].textContent.toLowerCase();
+    if (name.includes(input) || symbol.includes(input)) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+</script>
+{% endblock %}
+

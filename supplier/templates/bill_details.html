@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Bill Details{% endblock %}
+{% load widget_tweaks %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|lower == "inventory" %}
+        {% include 'dashboard/inventory.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+  <h1 class="text-3xl font-bold mb-6">Bill Details</h1>
+{% if bills %}
+    {% for bill in bills %}
+  <div class="mb-4">
+    <strong>Bill Number:</strong> {{ bill.bill_number }}
+  </div>
+  <div class="mb-4">
+    <strong>Date:</strong> {{ bill.bill_date }}
+  </div>
+  <div class="mb-4">
+    <strong>Amount:</strong> ₹{{ bill.amount }}
+  </div>
+  <div class="mb-4">
+    <strong>Description:</strong> {{ bill.description|default:"N/A" }}
+  </div>
+  <div class="mb-4">
+    <strong>Invoice:</strong>
+    {% if bill.invoice %}
+      <a href="{{ bill.invoice.url }}" target="_blank" class="text-blue-600 underline">View Invoice</a>
+    {% else %}
+      No invoice uploaded.
+    {% endif %}
+  </div>
+{% endfor %}
+{% else %}
+    <p>No bills available for this supplier.</p>
+  {% endif %}
+  <a href="{% url 'supplier_list' %}" class="text-blue-500 underline">Back to list</a>
+</div>
+{% endblock %}
