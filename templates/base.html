@@ -1,0 +1,226 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ERP Dashboard {% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Add in your base.html or specific page -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+  .select2-container {
+    width: 100% !important;
+  }
+</style>
+
+  {% block extra_css %} {% endblock %}
+  <style>
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #16a34a;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.5s ease;
+      z-index: 999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+  
+  <script>
+    function showToast(message, type='success') {
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + (type === 'error' ? 'bg-red-500' : 'bg-green-600');
+      toast.innerText = message;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.classList.add('show'); }, 100);
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 3000);
+    }
+ 
+    function toggleTheme() {
+  const html = document.documentElement;
+  html.classList.toggle('dark');
+  
+  const sun = document.getElementById('sun-icon');
+  const moon = document.getElementById('moon-icon');
+  sun.classList.toggle('hidden');
+  moon.classList.toggle('hidden');
+
+  // Save preference
+  if (html.classList.contains('dark')) {
+    localStorage.setItem('theme', 'dark');
+  } else {
+    localStorage.setItem('theme', 'light');
+  }
+
+  // Update Apex chart theme
+  chart.updateOptions({
+    theme: {
+      mode: html.classList.contains('dark') ? 'dark' : 'light'
+    }
+  });
+}
+
+// On page load — apply saved theme
+window.onload = function () {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.getElementById('sun-icon').classList.add('hidden');
+    document.getElementById('moon-icon').classList.remove('hidden');
+  }
+};
+  </script>
+<script>
+  window.existingPayments = {{ existing_payments|default:"[]"|safe }};
+</script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition duration-300">
+<div class="w-full flex flex-col md:flex-row min-h-screen">
+  {% block navcontent %}
+
+
+    {% endblock %}
+</nav>
+</aside>
+    <!-- Main Content -->
+    <main class="flex-1 p-6 space-y-8 transition duration-500">
+
+        {% block content %}
+
+
+        {% endblock %}
+
+    </main>
+</div>
+{% block extra_js %}{%  endblock %}
+<script>
+/* function toggleSubMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    menu.classList.toggle('hidden');
+  }
+
+  function toggleSubMenu(menuId) {
+    const menus = document.querySelectorAll('nav .group > div[id]');
+    
+    menus.forEach(menu => {
+      if (menu.id !== menuId) {
+        menu.classList.add('hidden');
+      }
+    });
+
+    const selectedMenu = document.getElementById(menuId);
+    selectedMenu.classList.toggle('hidden');
+  }
+
+  // Toggle and store menu
+  function toggleSubMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+    menus.forEach(menu => {
+      menu.classList.add('hidden');
+    });
+    document.getElementById(menuId).classList.remove('hidden');
+    localStorage.setItem('activeMenu', menuId);
+  }
+
+  // Store submenu item on click
+  document.querySelectorAll('.submenu-item').forEach(item => {
+    item.addEventListener('click', function () {
+      localStorage.setItem('activeSubMenuItem', this.href);
+      localStorage.setItem('activeMenu', this.dataset.parent);
+    });
+  });
+
+  // On page load, open last menu and highlight item
+  window.addEventListener('DOMContentLoaded', () => {
+    const activeMenu = localStorage.getItem('activeMenu');
+    const activeItemHref = localStorage.getItem('activeSubMenuItem');
+
+    if (activeMenu) {
+      const menuDiv = document.getElementById(activeMenu);
+      if (menuDiv) menuDiv.classList.remove('hidden');
+    }
+
+    if (activeItemHref) {
+      document.querySelectorAll('.submenu-item').forEach(item => {
+        if (item.href === activeItemHref) {
+          item.classList.add('text-blue-600', 'font-bold');
+        }
+      });
+    }
+  });*/
+
+
+
+
+
+
+  function toggleSubMenu(menuId) {
+    const menuDiv = document.getElementById(menuId);
+    const isOpen = !menuDiv.classList.contains('hidden');
+
+    // Close all menus
+    document.querySelectorAll('.submenu').forEach(menu => menu.classList.add('hidden'));
+
+    if (!isOpen) {
+      // Open clicked menu and store in localStorage
+      menuDiv.classList.remove('hidden');
+      localStorage.setItem('activeMenu', menuId);
+    } else {
+      // If already open and user clicked again, close it and remove from localStorage
+      localStorage.removeItem('activeMenu');
+    }
+  }
+
+  // Store submenu item on click
+  document.querySelectorAll('.submenu-item').forEach(item => {
+    item.addEventListener('click', function () {
+      localStorage.setItem('activeSubMenuItem', this.href);
+      localStorage.setItem('activeMenu', this.dataset.parent);
+    });
+  });
+
+  // On page load, restore active menu and submenu
+  window.addEventListener('DOMContentLoaded', () => {
+    const activeMenu = localStorage.getItem('activeMenu');
+    const activeItemHref = localStorage.getItem('activeSubMenuItem');
+
+    if (activeMenu) {
+      const menuDiv = document.getElementById(activeMenu);
+      if (menuDiv) menuDiv.classList.remove('hidden');
+    }
+
+    if (activeItemHref) {
+      document.querySelectorAll('.submenu-item').forEach(item => {
+        if (item.href === activeItemHref) {
+          item.classList.add('text-blue-600', 'font-bold');
+        }
+      });
+    }
+  });
+
+
+</script>
+
+</body>
+</html>
+

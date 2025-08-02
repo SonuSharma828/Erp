@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department.department_name == "technician" %}
+      {% include 'dashboard/technician.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="p-4 space-y-4">
+  <h2 class="text-xl font-bold">My Equipment Log</h2>
+  <table class="w-full text-sm border">
+    <thead>
+      <tr class="bg-gray-100 text-left">
+        <th class="p-2">Item</th>
+        <th class="p-2">Qty</th>
+        <th class="p-2">Issued On</th>
+        <th class="p-2">Returned?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr class="border-t">
+        <td class="p-2">{{ record.equipment.name }}</td>
+        <td class="p-2">{{ record.quantity }}</td>
+        <td class="p-2">{{ record.issue_date|date:"d M Y H:i" }}</td>
+        <td class="p-2">{{ record.is_returned|yesno:"Yes,No" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

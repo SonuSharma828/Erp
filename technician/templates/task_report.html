@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department.department_name == "technician" %}
+      {% include 'dashboard/technician.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="p-4 space-y-4">
+  <h2 class="text-xl font-bold">Task Report</h2>
+
+  <form method="get" class="flex gap-2 items-end">
+    <div>
+      <label>From:</label>
+      <input type="date" name="from" value="{{ from_date }}" class="border rounded px-2 py-1">
+    </div>
+    <div>
+      <label>To:</label>
+      <input type="date" name="to" value="{{ to_date }}" class="border rounded px-2 py-1">
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-1 rounded">Filter</button>
+  </form>
+
+  <table class="w-full text-sm border mt-4">
+    <thead>
+      <tr class="bg-gray-100 text-left">
+        <th class="p-2">Title</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Location</th>
+        <th class="p-2">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr class="border-t">
+        <td class="p-2">{{ task.title }}</td>
+        <td class="p-2">{{ task.scheduled_date }}</td>
+        <td class="p-2">{{ task.location }}</td>
+        <td class="p-2 capitalize">{{ task.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department.department_name == "technician" %}
+      {% include 'dashboard/technician.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="p-4 space-y-6">
+  <h2 class="text-2xl font-bold">My Tasks</h2>
+
+  <!-- Filters -->
+  <form method="get" class="flex flex-wrap gap-4 mb-4">
+    <input type="text" name="q" placeholder="Search..." value="{{ query }}" class="border rounded px-2 py-1">
+    <select name="status" class="border rounded px-2 py-1">
+      <option value="">All Status</option>
+      {% for val, label in tasks.paginator.object_list.model.STATUS_CHOICES %}
+        <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Filter</button>
+  </form>
+
+  <!-- Task List -->
+  <div class="grid gap-4">
+    {% for task in tasks %}
+      <div class="p-4 border bg-white rounded-xl shadow">
+        <h3 class="text-lg font-semibold">{{ task.title }}</h3>
+        <p class="text-sm text-gray-600">{{ task.location }} | {{ task.scheduled_date }}</p>
+        <p class="mt-1 text-sm">{{ task.description|truncatewords:20 }}</p>
+        <p class="mt-1 text-sm">Status: <span class="capitalize font-medium">{{ task.status }}</span></p>
+        <a href="{% url 'technician_task_detail' task.id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">View / Update</a>
+      </div>
+    {% empty %}
+      <p>No tasks found.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if tasks.has_other_pages %}
+    <div class="mt-4 flex gap-2">
+      {% if tasks.has_previous %}
+        <a href="?page={{ tasks.previous_page_number }}" class="px-3 py-1 border rounded">Previous</a>
+      {% endif %}
+      <span class="px-3 py-1">{{ tasks.number }} / {{ tasks.paginator.num_pages }}</span>
+      {% if tasks.has_next %}
+        <a href="?page={{ tasks.next_page_number }}" class="px-3 py-1 border rounded">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

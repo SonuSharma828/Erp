@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department.department_name == "technician" %}
+      {% include 'dashboard/technician.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="p-4 space-y-6">
+  <h2 class="text-2xl font-bold">Technician Dashboard</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Task Summary -->
+    <div class="p-4 bg-white rounded-2xl shadow">
+      <h3 class="font-semibold mb-2">Task Summary</h3>
+      {% for status in task_counts %}
+        <p class="text-sm capitalize">{{ status.status }}: <strong>{{ status.count }}</strong></p>
+      {% empty %}
+        <p>No tasks found.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Attendance -->
+    <div class="p-4 bg-white rounded-2xl shadow">
+      <h3 class="font-semibold mb-2">Today's Attendance</h3>
+      {% if attendance_today %}
+        <p>Status: <strong class="capitalize">{{ attendance_today.status }}</strong></p>
+        {% if attendance_today.remarks %}
+          <p>Remarks: {{ attendance_today.remarks }}</p>
+        {% endif %}
+      {% else %}
+        <p>Not marked yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Equipment -->
+    <div class="p-4 bg-white rounded-2xl shadow">
+      <h3 class="font-semibold mb-2">Equipment Issued Today</h3>
+      {% if issued_today %}
+        <ul class="list-disc ml-4 text-sm">
+          {% for item in issued_today %}
+            <li>{{ item.equipment.name }} - {{ item.quantity }} {{ item.equipment.unit }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No equipment issued today.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<canvas id="taskChart" class="w-full max-w-md"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('taskChart').getContext('2d');
+  const data = {
+    labels: {{ status_counts.keys|safe }},
+    datasets: [{
+      label: 'Task Status',
+      data: {{ status_counts.values|safe }},
+      backgroundColor: ['#60A5FA', '#FCD34D', '#34D399', '#F87171'],
+    }]
+  };
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: data,
+  });
+</script>
+
+
+{% endblock %}
+
