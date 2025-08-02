@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Task Earning Dashboard{% endblock %}
+
+{% load slugify_tags %}
+{% block navcontent %}
+        {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">Task Earnings</h1>
+<a href="{% url 'spp_dashboard' %}" class="inline-block mb-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 shadow">
+    ← Back to Financial Dashboard
+</a>
+<div class="flex justify-end mb-4">
+    <label class="mr-2">Filter:</label>
+    <select id="taskFilter" onchange="loadTaskChart()" class="border px-2 py-1 rounded">
+        <option value="daily">Daily</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+    </select>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+    <canvas id="taskChart" class="w-full h-96"></canvas>
+</div>
+
+<div class="flex space-x-4 mt-6">
+    <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">Export PDF</button>
+    <a href="{% url 'export_task_earning_csv' %}" class="bg-green-600 text-white px-4 py-2 rounded shadow">Export CSV</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold text-lg mb-2">Earnings by Technician</h3>
+        <ul>
+            {% for t in technician_breakdown %}
+            <li class="flex justify-between text-sm border-b py-1">
+                <span>{{ t.technician__name }}</span>
+                <span>₹ {{ t.total|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-semibold text-lg mb-2">Earnings by Payment Mode</h3>
+        <ul>
+            {% for m in mode_breakdown %}
+            <li class="flex justify-between text-sm border-b py-1">
+                <span>{{ m.payment_mode__name }}</span>
+                <span>₹ {{ m.total|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.register({
+    id: 'noDataPlugin',
+    afterDraw: function(chart) {
+        if (!chart.data.datasets[0].data.length || chart.data.datasets[0].data.every(d => d === 0)) {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#999';
+            ctx.fillText('No data available', chart.width / 2, chart.height / 2);
+            ctx.restore();
+        }
+    }
+});
+
+let taskChart;
+
+function loadTaskChart() {
+    const filter = document.getElementById("taskFilter").value;
+
+    fetch(`/tasks/task-earning-chart-data/?filter=${filter}`)
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("taskChart").getContext("2d");
+
+            if (taskChart) taskChart.destroy();
+
+            taskChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Earnings (₹)',
+                        data: data.data,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => `₹ ${value}`
+                            }
+                        }
+                    }
+                },
+                plugins: ['noDataPlugin']
+            });
+        });
+}
+
+document.addEventListener("DOMContentLoaded", loadTaskChart);
+</script>
+{% endblock %}
+

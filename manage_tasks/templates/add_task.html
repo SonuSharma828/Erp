@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Task {% endblock %}
+
+{% block navcontent %}
+{% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|lower == "hr" %}
+      {% include 'dashboard/hr.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block extra_css %} 
+
+<style>
+  .dropdown-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6 bg-white rounded shadow">
+  <h2 class="text-2xl font-semibold mb-4">Add New Task</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Task Detail</label>
+        <textarea name="task_detail" rows="3" class="w-full border border-gray-300 rounded p-2" required></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Date</label>
+        <input type="date" name="date" class="w-full border border-gray-300 rounded p-2" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Priority</label>
+        <select name="priority" class="w-full border border-gray-300 rounded p-2" required>
+          {% for priority in priorities %}
+            <option value="{{ priority.name }}">{{ priority.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Location</label>
+        <input type="text" name="location" class="w-full border border-gray-300 rounded p-2" required>
+      </div>
+<div class="relative mt-6">
+  <label class="block text-sm font-medium mb-1">Assign To</label>
+  <input type="text" id="employee-search" class="w-full border rounded p-2" placeholder="Search employee...">
+
+  <select id="employee-select" name="assigned_to" class="dropdown-list w-full border mt-1 rounded p-2" size="6">
+    <!-- JS will fill -->
+  </select>
+
+  <div class="flex justify-between text-xs text-gray-600 mt-1">
+    <button type="button" id="prev-employee-page" class="px-2 py-1 bg-gray-200 rounded">⬅ Prev</button>
+    <span id="employee-page-info">Page 1</span>
+    <button type="button" id="next-employee-page" class="px-2 py-1 bg-gray-200 rounded">Next ➡</button>
+  </div>
+</div>
+
+
+<div class="relative">
+  <label class="block text-sm font-medium mb-1">Select Customer</label>
+  <input type="text" id="customer-search" class="w-full border rounded p-2" placeholder="Search customer...">
+
+  <select id="customer-select" name="customer" class="dropdown-list w-full border mt-1 rounded p-2" size="6">
+    <!-- Will be filled via JS -->
+  </select>
+
+  <div class="flex justify-between text-xs text-gray-600 mt-1">
+    <button type="button" id="prev-customer-page" class="px-2 py-1 bg-gray-200 rounded">⬅ Prev</button>
+    <span id="customer-page-info">Page 1</span>
+    <button type="button" id="next-customer-page" class="px-2 py-1 bg-gray-200 rounded">Next ➡</button>
+  </div>
+</div>
+
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Service</label>
+        <select name="service" class="w-full border border-gray-300 rounded p-2">
+          {% for service in services %}
+            <option value="{{ service.id }}">{{ service.name }} (₹{{ service.total_with_tax }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+
+    <div class="mt-6">
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Task</button>
+      <a href="{% url 'task_list' %}" class="ml-3 px-4 py-2 text-blue-600 hover:underline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  const customerData = [
+    {% for customer in customers %}
+      { id: '{{ customer.id }}', name: '{{ customer.customer_name|escapejs }}' },
+    {% endfor %}
+  ];
+
+  let currentPage = 1;
+  const perPage = 10;
+  let filtered = [...customerData];
+
+  const selectBox = document.getElementById("customer-select");
+  const searchInput = document.getElementById("customer-search");
+  const pageInfo = document.getElementById("customer-page-info");
+  const nextBtn = document.getElementById("next-customer-page");
+  const prevBtn = document.getElementById("prev-customer-page");
+
+  function renderPage() {
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    const currentItems = filtered.slice(start, end);
+
+    selectBox.innerHTML = "";
+    currentItems.forEach(cust => {
+      const option = document.createElement("option");
+      option.value = cust.id;
+      option.textContent = cust.name;
+      selectBox.appendChild(option);
+    });
+
+    pageInfo.textContent = `Page ${currentPage}`;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = end >= filtered.length;
+  }
+
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.toLowerCase();
+    filtered = customerData.filter(cust => cust.name.toLowerCase().includes(q));
+    currentPage = 1;
+    renderPage();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if ((currentPage * perPage) < filtered.length) {
+      currentPage++;
+      renderPage();
+    }
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderPage();
+    }
+  });
+
+  // Initial render
+  renderPage();
+
+
+  const employeeData = [
+    {% for emp in employees %}
+      { id: '{{ emp.sno }}', name: '{{ emp.name|escapejs }}' },
+    {% endfor %}
+  ];
+
+  let empCurrentPage = 1;
+  const empPerPage = 10;
+  let empFiltered = [...employeeData];
+
+  const empSelect = document.getElementById("employee-select");
+  const empSearch = document.getElementById("employee-search");
+  const empPageInfo = document.getElementById("employee-page-info");
+  const empNextBtn = document.getElementById("next-employee-page");
+  const empPrevBtn = document.getElementById("prev-employee-page");
+
+  function renderEmpPage() {
+    const start = (empCurrentPage - 1) * empPerPage;
+    const end = start + empPerPage;
+    const items = empFiltered.slice(start, end);
+
+    empSelect.innerHTML = "";
+    items.forEach(emp => {
+      const option = document.createElement("option");
+      option.value = emp.id;
+      option.textContent = emp.name;
+      empSelect.appendChild(option);
+    });
+
+    empPageInfo.textContent = `Page ${empCurrentPage}`;
+    empPrevBtn.disabled = empCurrentPage === 1;
+    empNextBtn.disabled = end >= empFiltered.length;
+  }
+
+  empSearch.addEventListener("input", () => {
+    const q = empSearch.value.toLowerCase();
+    empFiltered = employeeData.filter(emp => emp.name.toLowerCase().includes(q));
+    empCurrentPage = 1;
+    renderEmpPage();
+  });
+
+  empNextBtn.addEventListener("click", () => {
+    if ((empCurrentPage * empPerPage) < empFiltered.length) {
+      empCurrentPage++;
+      renderEmpPage();
+    }
+  });
+
+  empPrevBtn.addEventListener("click", () => {
+    if (empCurrentPage > 1) {
+      empCurrentPage--;
+      renderEmpPage();
+    }
+  });
+
+  renderEmpPage();
+
+
+</script>
+
+
+{% endblock %}
+
