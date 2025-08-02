@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Expense{% endblock %}
+{% load custom_filters %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow mt-6">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Expense</h1>
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label for="id_company" class="block text-sm font-medium text-gray-700">Company</label>
+      {{ form.company|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+    </div>
+
+    <div>
+      <label for="id_employee" class="block text-sm font-medium text-gray-700">Employee (optional)</label>
+      {{ form.employee|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+      <p class="text-xs text-gray-500 mt-1">If this expense is for an employee (e.g., advance, fine), select the employee.</p>
+    </div>
+
+    <div>
+      <label for="id_date" class="block text-sm font-medium text-gray-700">Date</label>
+      {{ form.date|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+
+    </div>
+    <div>
+      <label for="id_expense_type" class="block text-sm font-medium text-gray-700">Expense Type</label>
+      {{ form.expense_type|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+    </div>
+    <div>
+      <label for="id_amount_type" class="block text-sm font-medium text-gray-700">Amount Type</label>
+      {{ form.amount_type|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+    </div>
+
+        <div>
+      <label for="id_amount" class="block text-sm font-medium text-gray-700">Amount</label>
+      {{ form.amount|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+    </div>
+
+    <div>
+      <label for="id_description" class="block text-sm font-medium text-gray-700">Description</label>
+      {{ form.description|add_class:"w-full mt-1 p-2 border rounded-md shadow-sm" }}
+    </div>
+
+    <div class="flex justify-end space-x-3 pt-4">
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update</button>
+      <a href="{% url 'manage_expenses' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

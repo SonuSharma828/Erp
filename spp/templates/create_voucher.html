@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Voucher {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <h1 class="text-3xl font-bold mb-5">Create Voucher</h1>
+
+    <form id="voucherForm" method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" onclick="window.location.href='{% url 'voucher_history' %}'" class="bg-gray-500 text-white px-3 py-1 rounded">Cancel</button>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Save</button>
+        </div>
+    </form>
+
+    {% endblock %}
+
+{% block extra_js %}
+    <script>
+/*        document.getElementById('voucherForm').onsubmit = function(e) {
+            e.preventDefault();
+            fetch("{% url 'create_voucher' %}", {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Voucher created successfully.");
+                    window.location.href = "{% url 'voucher_history' %}";
+                } else {
+                    alert("Error: " + JSON.stringify(data.errors));
+                }
+            });
+        };*/
+    </script>
+
+{% endblock %}

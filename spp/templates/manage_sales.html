@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Manage Sales{% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+{% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-5">Manage Sales</h1>
+
+<!-- Filter + Add Button -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+  <div class="flex flex-wrap gap-2">
+    <input type="text" id="searchInput" placeholder="Search..." class="px-3 py-2 border border-gray-300 rounded w-48" />
+
+    <select id="companyFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Companies</option>
+      {% for comp in companies %}
+        <option value="{{ comp.name }}">{{ comp.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="productFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Products</option>
+      {% for prod in products %}
+        <option value="{{ prod.item_name }}">{{ prod.item_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <a href="{% url 'add_sales' %}" class="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap">+ Add New Sales</a>
+</div>
+
+<!-- Table -->
+<div class="overflow-x-auto">
+  <table class="table-auto w-full bg-white rounded-xl overflow-hidden shadow">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="p-2">Sno</th>
+        <th class="p-2">Company</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Invoice</th>
+        <th class="p-2">Product</th>
+        <th class="p-2">Amount</th>
+        <th class="p-2">Payments</th>
+        <th class="p-2">Description</th>
+        <th class="p-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="salesTable">
+      {% for sale in sales %}
+      <tr class="border-t sale-row">
+        <td class="p-2 text-center">{{ forloop.counter0|add:sales.start_index }}</td>
+        <td class="p-2 text-center">{{ sale.company.name|title }}</td>
+        <td class="p-2 text-center">{{ sale.date }}</td>
+        <td class="p-2 text-center">{{ sale.invoice_number }}</td>
+        <td class="p-2 text-center">{{ sale.product.item_name }}</td>
+        <td class="p-2 text-center {{ sale.payment_status_color }}">
+          ₹ {{ sale.amount }}
+          <div class="text-xs italic">{{ sale.payment_message }}</div>
+        </td>
+        <td class="p-2 text-left">
+          {% for p in sale.payments.all %}
+            {{ p.payment_type|title }}: ₹{{ p.amount }}<br>
+          {% empty %}
+            <span class="text-gray-500 italic">No Payments</span>
+          {% endfor %}
+        </td>
+        <td class="p-2 text-center">{{ sale.description|title }}</td>
+        <td class="p-2 text-center">
+          <a href="{% url 'edit_sales' sale.id %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+          <a href="{% url 'delete_sales' sale.id %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure?')">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+<div class="mt-6 flex justify-center">
+  <nav class="inline-flex -space-x-px">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 border border-gray-300 text-gray-700 hover:bg-gray-100">Previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="px-3 py-1 border border-blue-500 bg-blue-500 text-white">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" class="px-3 py-1 border border-gray-300 text-gray-700 hover:bg-gray-100">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 border border-gray-300 text-gray-700 hover:bg-gray-100">Next</a>
+    {% endif %}
+  </nav>
+</div>
+
+</div>
+
+<!-- Filter Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('.sale-row');
+    const searchInput = document.getElementById('searchInput');
+    const companyFilter = document.getElementById('companyFilter');
+    const productFilter = document.getElementById('productFilter');
+
+    function filterRows() {
+      const search = searchInput.value.toLowerCase();
+      const selectedCompany = companyFilter.value.toLowerCase();
+      const selectedProduct = productFilter.value.toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const companyText = row.children[0].innerText.toLowerCase();
+        const productText = row.children[3].innerText.toLowerCase();
+
+        const matchesSearch = rowText.includes(search);
+        const matchesCompany = !selectedCompany || companyText === selectedCompany;
+        const matchesProduct = !selectedProduct || productText === selectedProduct;
+
+        row.style.display = matchesSearch && matchesCompany && matchesProduct ? '' : 'none';
+      });
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    companyFilter.addEventListener('change', filterRows);
+    productFilter.addEventListener('change', filterRows);
+  });
+</script>
+
+{% endblock %}
+

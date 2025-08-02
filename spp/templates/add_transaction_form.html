@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Transaction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <form id="transactionForm" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="flex justify-end space-x-2 mt-4">
+        <button type="button" onclick="closePopup()" class="bg-gray-500 text-white px-3 py-1 rounded">Cancel</button>
+        <button type="submit" class="bg-green-600 text-white px-4 py-1 rounded">Save</button>
+    </div>
+</form>
+
+
+<script>
+    $("#transactionForm").submit(function(e){
+        e.preventDefault();
+        $.post("{% url 'add_transaction' %}", $(this).serialize(), function(response){
+            if(response.success){
+                alert("Transaction added successfully.");
+                location.reload();
+            } else {
+                alert("Error: " + JSON.stringify(response.errors));
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

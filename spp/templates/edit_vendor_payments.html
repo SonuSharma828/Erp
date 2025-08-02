@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Vendor Payment{% endblock %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department.department_name|lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<!--
+<script type="application/json" id="existing-payments-data">
+  {{ existing_payments|safe }}
+</script>
+-->
+
+<div x-data="vendorPaymentForm()"  class="max-w-4xl mx-auto bg-white p-6 rounded shadow space-y-6">
+  <h1 class="text-3xl font-bold mb-4">Edit Vendor Payment</h1>
+
+  <form method="POST" @submit="prepareForSubmit">
+    {% csrf_token %}
+    <!-- Vendor Payment Form -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for field in vendor_payment_form %}
+        <div>
+          <label class="block font-semibold mb-1">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Payment Entries -->
+    <div class="mt-6">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-xl font-semibold">Payment Breakdown</h2>
+        <button type="button" @click="showModal = true" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Add Payment</button>
+      </div>
+
+      <template x-if="payments.length > 0">
+        <table class="w-full text-left border">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2">Type</th>
+              <th class="p-2">Amount</th>
+              <th class="p-2">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="(payment, index) in payments" :key="index">
+              <tr>
+                <td class="p-2" x-text="payment.type"></td>
+                <td class="p-2" x-text="payment.amount"></td>
+                <td class="p-2">
+                  <button type="button" @click="removePayment(index)" class="text-red-600">Remove</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+      <div class="mt-3">
+        <span class="font-semibold">Total Paid:</span>
+        <span :class="totalPaid == expectedAmount ? 'text-green-600' : 'text-red-600'" x-text="totalPaidDisplay()"></span>
+      </div>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <template x-for="(payment, index) in payments">
+      <div>
+        <input type="hidden" :name="'payments-' + index + '-payment_type'" :value="payment.type">
+        <input type="hidden" :name="'payments-' + index + '-amount'" :value="payment.amount">
+      </div>
+    </template>
+    <input type="hidden" name="payments-TOTAL_FORMS" :value="payments.length">
+    <input type="hidden" name="payments-INITIAL_FORMS" value="0">
+
+    <div class="mt-6">
+      <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Update Payment</button>
+      <a href="{% url 'manage_vendor_payments' %}" class="ml-4 text-blue-500">Cancel</a>
+    </div>
+  </form>
+
+  <!-- Modal -->
+  <div x-show="showModal"
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+       @click.away="showModal = false"
+       x-transition>
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">Add Payment</h2>
+      <div class="space-y-3">
+        <label class="block">
+          <span class="block mb-1 font-medium">Payment Type</span>
+          <select x-model="newPayment.type" class="w-full border rounded p-2">
+            <option value="">-- Select --</option>
+            <option value="GPay">GPay</option>
+            <option value="Paytm">Paytm</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Cash">Cash</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="block mb-1 font-medium">Amount</span>
+          <input type="number" x-model="newPayment.amount" class="w-full border rounded p-2" min="0" step="0.01">
+        </label>
+      </div>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button type="button" @click="addPayment" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add</button>
+        <button type="button" @click="showModal = false" class="text-gray-600 px-4 py-2 border rounded">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+function vendorPaymentForm() {
+  return {
+    payments: {{ existing_payments|safe }},
+    showModal: false,
+    newPayment: { type: '', amount: 0 },
+    get totalPaid() {
+      return this.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    },
+    get expectedAmount() {
+      const amountField = document.querySelector('input[name="amount"]');
+      return parseFloat(amountField?.value || 0);
+    },
+    totalPaidDisplay() {
+      return `₹ ${this.totalPaid.toFixed(2)}`;
+    },
+    addPayment() {
+      if (!this.newPayment.type || !this.newPayment.amount || this.newPayment.amount <= 0) {
+        alert("Please enter valid payment type and amount.");
+        return;
+      }
+      this.payments = [...this.payments, { ...this.newPayment }];
+      this.newPayment = { type: '', amount: 0 };
+      this.showModal = false;
+    },
+    removePayment(index) {
+      this.payments.splice(index, 1);
+    },
+    prepareForSubmit() {}
+  }
+}
+
+</script>
+{% endblock %}
+

@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Expenses{% endblock %}
+{% load custom_filters %}
+
+{% block navcontent %}
+  {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      {% include 'dashboard/admin.html' %}
+    {% elif request.user.department %}
+      {% if request.user.department.department_name|strip_lower == "finance" %}
+        {% include 'dashboard/finance.html' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-5">Manage Expenses</h1>
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+  <div class="flex flex-wrap gap-2">
+    <input type="text" id="searchInput" placeholder="Search..." class="px-3 py-2 border border-gray-300 rounded w-48" />
+
+    <select id="companyFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Companies</option>
+      {% for comp in companies %}
+        <option value="{{ comp.name }}">{{ comp.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="typeFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Types</option>
+      {% for etype in expense_types %}
+        <option value="{{ etype.name }}">{{ etype.name }}</option>
+      {% endfor %}
+    </select>
+    <select id="atypeFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Types</option>
+      {% for atype in amount_type %}
+        <option value="{{ atype.name }}">{{ atype.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="employeeFilter" class="px-3 py-2 border border-gray-300 rounded">
+      <option value="">All Employees</option>
+      {% for emp in employees %}
+        <option value="{{ emp.name }}">{{ emp.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <a href="{% url 'add_expenses' %}" class="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap">+ Add New Expenses</a>
+</div>
+
+<div class="overflow-x-auto">
+  <table class="table-auto w-full bg-white rounded-xl overflow-hidden shadow mt-4">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="p-2 text-center">Sno</th>
+        <th class="p-2 text-center">Company</th>
+        <th class="p-2 text-center">Date</th>
+        <th class="p-2 text-center">Amount</th>
+        <th class="p-2 text-center">Amount Type</th>
+        <th class="p-2 text-center">Expense Type</th>
+        <th class="p-2 text-center">Employee</th>
+        <th class="p-2 text-center">Description</th>
+        <th class="p-2 text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="expenseTable">
+      {% for expense in page_obj %}
+      <tr class="border-t expense-row">
+        <td class="py-2 text-center">{{ forloop.counter0|add:page_obj.start_index }}</td>
+        <td class="py-2 text-center">{{ expense.company|title }}</td>
+        <td class="p-2 text-center">{{ expense.date }}</td>
+        <td class="p-2 text-center">₹ {{ expense.amount }}</td>
+        <td class="p-2 text-center"> {{ expense.amount_type|title }}</td>
+        <td class="p-2 text-center">{{ expense.expense_type|title }}</td>
+        <td class="py-2 text-center">
+          {% if expense.employee %}
+            <a href="{% url 'employee:employee_detail' expense.employee.pk %}" class="text-blue-600 hover:underline">
+              {{ expense.employee.name }}
+            </a>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td class="p-2 text-center">{{ expense.description|title }}</td>
+        <td class="p-2 text-center">
+          <a href="{% url 'edit_expense' expense.id %}" class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+          <a href="{% url 'delete_expense' expense.id %}" class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure?')">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% if page_obj.has_other_pages %}
+<div class="mt-4 flex justify-center space-x-2">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">&laquo; Prev</a>
+  {% endif %}
+
+  <span class="px-4 py-1 bg-blue-600 text-white rounded">{{ page_obj.number }}</span>
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+
+</div>
+
+<!-- Filter Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('.expense-row');
+    const searchInput = document.getElementById('searchInput');
+    const companyFilter = document.getElementById('companyFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const atypeFilter = document.getElementById('atypeFilter');
+    const employeeFilter = document.getElementById('employeeFilter');
+
+    function filterRows() {
+      const search = searchInput.value.toLowerCase();
+      const company = companyFilter.value.toLowerCase();
+      const type = typeFilter.value.toLowerCase();
+      const atype = atypeFilter.value.toLowerCase();
+      const employee = employeeFilter.value.toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const companyText = row.children[0].innerText.toLowerCase();
+        const typeText = row.children[4].innerText.toLowerCase();
+        const atypeText = row.children[3].innerText.toLowerCase();
+        const employeeText = row.children[5].innerText.toLowerCase();
+
+        const matchSearch = rowText.includes(search);
+        const matchCompany = !company || companyText === company;
+        const matchType = !type || typeText === type;
+        const matchaType = !atype || atypeText === atype;
+        const matchEmployee = !employee || employeeText === employee;
+
+        row.style.display = matchSearch && matchCompany && matchType && matchaType && matchEmployee ? '' : 'none';
+      });
+    }
+
+    [searchInput, companyFilter, typeFilter,atypeFilter, employeeFilter].forEach(el => {
+      el.addEventListener('input', filterRows);
+      el.addEventListener('change', filterRows);
+    });
+  });
+</script>
+
+{% endblock %}
+

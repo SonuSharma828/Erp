@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Vendor Payments{% endblock %}
+
+{% block navcontent %}
+    {% if request.user.is_authenticated %}
+        {% if request.user.is_superuser %}
+            {% include 'dashboard/admin.html' %}
+        {% elif request.user.department %}
+            {% if request.user.department.department_name|strip_lower == "finance" %}
+                {% include 'dashboard/finance.html' %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-5">Manage Vendor Payments</h1>
+<a href="{% url 'add_vendor_payment' %}" class="px-4 py-2 bg-blue-700 text-white rounded mb-4 inline-block">+ Add New Payment</a>
+
+<!-- Search & Filter Controls -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+  <input
+    id="vendorSearchInput"
+    type="text"
+    placeholder="Search payments..."
+    class="px-4 py-2 border rounded w-full md:w-1/3"
+  />
+
+  <select id="paymentStatusFilter" class="px-4 py-2 border rounded w-full md:w-1/4">
+    <option value="">All Statuses</option>
+    <option value="pending">Pending</option>
+    <option value="overpaid">Overpaid</option>
+    <option value="Settled">Settled</option>
+  </select>
+</div>
+
+<!-- Vendor Payment Table -->
+<table id="vendorPaymentTable" class="table-auto w-full bg-white rounded-xl overflow-hidden shadow mt-4">
+    <thead class="bg-gray-200">
+        <tr>
+            <th class="p-2 text-center">Vendor Name</th>
+            <th class="p-2 text-center">Date</th>
+            <th class="p-2 text-center">Amount</th>
+            <th class="p-2 text-center">Payment Methods</th>
+            <th class="p-2 text-center">Pending</th>
+            <th class="p-2 text-center">Description</th>
+            <th class="p-2 text-center">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vendor_payment in vendor_payments %}
+        <tr class="border-t payment-row" data-status="{{ vendor_payment.payment_message|lower }}">
+            <td class="p-2 text-center">{{ vendor_payment.vendor_name|title }}</td>
+            <td class="p-2 text-center">{{ vendor_payment.date }}</td>
+
+            <!-- Amount: Color coded -->
+            <td class="p-2 text-center font-semibold {{ vendor_payment.payment_status_color }}">
+                ₹ {{ vendor_payment.amount }}
+            </td>
+
+            <!-- Payment Methods Summary -->
+            <td class="p-2 text-center text-sm">{{ vendor_payment.payment_summary }}</td>
+
+            <!-- Pending Amount or Status -->
+            <td class="p-2 text-center font-semibold">{{ vendor_payment.payment_message }}</td>
+
+            <td class="p-2 text-center">{{ vendor_payment.description|default:"-" }}</td>
+
+            <td class="p-2 text-center">
+                <a href="{% url 'edit_vendor_payment' vendor_payment.id %}"
+                   class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                <a href="{% url 'delete_vendor_payment' vendor_payment.id %}"
+                   class="inline-block bg-red-500 text-white text-sm px-3 py-1 rounded hover:bg-red-600"
+                   onclick="return confirm('Are you sure you want to delete this payment?');">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center text-gray-500 py-4">No vendor payments available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- JS: Search + Filter -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('vendorSearchInput');
+    const statusFilter = document.getElementById('paymentStatusFilter');
+    const rows = document.querySelectorAll('#vendorPaymentTable tbody .payment-row');
+
+    function filterTable() {
+      const searchText = searchInput.value.toLowerCase();
+      const selectedStatus = statusFilter.value.toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const rowStatus = row.dataset.status;
+
+        const matchesSearch = rowText.includes(searchText);
+        const matchesStatus = !selectedStatus || rowStatus.includes(selectedStatus);
+
+        row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+      });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+  });
+</script>
+
+{% endblock %}
+

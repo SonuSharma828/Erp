@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Finance Dashboard {% endblock %}
+{% load custom_filters %}
+{% block navcontent %}
+ {% load custom_filters %}
+            {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser %}
+    {% include 'dashboard/admin.html' %}
+  {% elif request.user.department %}
+    {% if request.user.department.department_name|strip_lower == "finance" %}
+      {% include 'dashboard/finance.html' %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <h1 class="text-3xl font-bold text-center mb-6">Finance Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-4 rounded-xl shadow">
+         <a href="{% url 'sales_dashboard' %}">
+            <h2 class="text-lg font-semibold mb-2">Total Sales</h2>
+            <p class="text-2xl text-green-600 font-bold">₹ {{ total_sales }}</p>
+        </a>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <a href="{% url 'task_earning_dashboard' %}">
+            <h2 class="text-lg font-semibold mb-2">Total Task Earning</h2>
+            <p class="text-2xl text-green-600 font-bold">₹ {{ total_task_amount }}</p>
+           </a>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <a href="{% url 'total_expense_dashboard' %}">
+            <h2 class="text-lg font-semibold mb-2">Total Expenses</h2>
+            <p class="text-2xl text-red-600 font-bold">₹ {{ total_expenses }}</p>
+          </a>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <a href="{% url 'vendor_payment_dashboard' %}">
+            <h2 class="text-lg font-semibold mb-2">Vendor Payments</h2>
+            <p class="text-2xl text-red-500 font-bold">₹ {{ total_vendor_payments }}</p>
+          </a>
+        </div>
+         <div class="bg-white p-4 rounded-xl shadow">
+           <a href="{% url 'employee_payment_dashboard' %}">
+            <h2 class="text-lg font-semibold mb-2">Employee Payments</h2>
+            <p class="text-2xl text-red-500 font-bold">₹ {{ total_employee_payments }}</p>
+          </a>
+
+        </div>
+    </div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white p-4 rounded-xl shadow md:col-span-2">
+        <h2 class="text-lg font-semibold mb-2">PAL (Profit and Loss)</h2>
+         {% if net_pal > 0 %}
+        <p class="text-2xl text-green-600 font-bold">₹ {{ net_pal|floatformat:2 }}</p>
+         {% elif net_pal < 0 %}
+        <p class="text-2xl text-red-600 font-bold">₹ {{ net_pal|floatformat:2 }}</p>
+         {% else %}
+        <p class="text-2xl text-gray-600 font-bold">₹ 0.00</p>
+         {% endif %}
+
+    </div>
+</div>
+<div class="flex justify-end mb-4">
+    <label for="timeFilter" class="mr-2 text-sm font-medium">Filter:</label>
+    <select id="timeFilter" onchange="updateChart()" class="border rounded px-3 py-1">
+        <option value="daily">Daily</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+    </select>
+</div>
+
+
+    <div class="bg-white p-4 rounded-xl shadow mb-8 h-96">
+    <h2 class="text-lg font-semibold mb-4">Finance Overview</h2>
+    <canvas id="summaryChart" class="w-full h-full"></canvas>
+    </div>
+
+
+    <div class="flex space-x-4">
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700">Export PDF</button>
+        <button onclick="exportCSV()" class="bg-green-600 text-white px-4 py-2 rounded-xl shadow hover:bg-green-700">Export CSV</button>
+    </div>
+
+    {% endblock %}
+
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('summaryChart').getContext('2d');
+
+    const summaryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [
+                'Sales',
+                'Task Earnings',
+                'Expenses',
+                'Vendor Payments',
+                'Employee Payments'
+            ],
+            datasets: [{
+                label: 'Amount (₹)',
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: [
+                    '#22c55e', '#3b82f6', '#ef4444', '#f97316', '#8b5cf6'
+                ],
+                borderRadius: 6,
+                barThickness: 'flex'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `₹ ${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹ ' + value;
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        autoSkip: false
+                    }
+                }
+            }
+        }
+    });
+
+    async function fetchChartData(filterType = 'monthly') {
+        try {
+            const response = await fetch(`/spp/finance-summary/?filter=${filterType}`);
+            const data = await response.json();
+
+            const dataset = [
+                data.sales || 0,
+                data.task || 0,
+                data.expenses || 0,
+                data.vendor || 0,
+                data.employee || 0
+            ];
+
+            summaryChart.data.datasets[0].data = dataset;
+            summaryChart.update();
+        } catch (error) {
+            console.error("Error loading chart data:", error);
+        }
+    }
+
+    function updateChart() {
+        const selected = document.getElementById('timeFilter').value;
+        fetchChartData(selected);
+    }
+
+    function exportCSV() {
+        const labels = ['Sales', 'Task Earnings', 'Expenses', 'Vendor Payments', 'Employee Payments'];
+        const currentData = summaryChart.data.datasets[0].data;
+
+        let csvContent = "Label,Amount\n";
+        labels.forEach((label, i) => {
+            csvContent += `${label},${currentData[i].toFixed(2)}\n`;
+        });
+
+        const netPAL = currentData[0] + currentData[1] - (currentData[2] + currentData[3] + currentData[4]);
+        csvContent += `Net Profit/Loss,${netPAL.toFixed(2)}`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "finance_summary.csv";
+        link.click();
+    }
+
+    // Load monthly on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchChartData("monthly");
+    });
+</script>
+{% endblock %}
+
